@@ -356,7 +356,7 @@ function jumpToMyMess() {
 // --------------------------------------------------------
 function switchTab(tabId) {
   currentTab = tabId;
-  const tabs = ['map', 'lpu', 'mess', 'community', 'eateries', 'warden', 'info', 'ppt'];
+  const tabs = ['touch', 'map', 'lpu', 'mess', 'community', 'eateries', 'warden', 'info', 'ppt'];
 
   tabs.forEach(t => {
     const sec = document.getElementById(`tab-${t}`);
