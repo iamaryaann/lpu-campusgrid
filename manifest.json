@@ -1,8 +1,8 @@
 {
   "name": "CampusGrid — LPU Verto Super-App",
   "short_name": "CampusGrid",
-  "description": "LPU Student Super-App: Attendance, Timetable, SGPA Calc, CA Tracker, Laundry, Bill Split, Live Mess & Official LPU Map Links",
-  "start_url": "./index.html?v=5",
+  "description": "LPU Student Super-App v6.0: Section Timetable Sync, PYQ Bank, Pocket Budget, Placement Checker, Verto Bazaar, Lost & Found, Live Mess Poll & Official LPU Map Links",
+  "start_url": "./index.html?v=6",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f5f7fb",

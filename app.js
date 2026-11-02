@@ -1,8 +1,10 @@
 // ========================================================
-// CAMPUSGRID v5.0 — ULTIMATE LPU VERTO SUPER-APP CONTROLLER
-// Native Mobile App Shell • Zero Embedded Map (Direct Official Links)
-// 4 Clean Curated Themes • Attendance • Timetable • CA Tracker • Pomodoro
-// SGPA/CGPA Calc • Mess Menu & QR • Uni-Laundry • Bill Split • Cab-Pool
+// CAMPUSGRID v6.0 — COMPLETE LEVEL 1 + LEVEL 2 VERTO SUPER-APP
+// Native Mobile App Shell • Zero Embedded Map • 4 Clean Themes
+// Level 1: 1-Click Section Timetable Sync, PYQ Bank, Pocket-Money Budget,
+//          Block 32 Placement & OD Checker, Smart Class/CA Push Alerts
+// Level 2: Verto Bazaar (OLX), Campus Lost & Found, Live Mess Food Poll
+//          (Hybrid Cloud Sync + LocalStorage + WhatsApp Deep Links)
 // ========================================================
 
 const STORAGE_KEYS = {
@@ -11,16 +13,24 @@ const STORAGE_KEYS = {
   SUBJECTS: 'cg_touch_subjects_v3',
   TIMETABLE: 'cg_touch_timetable_v3',
   TASKS: 'cg_verto_tasks_v5',
+  PYQ_CUSTOM: 'cg_verto_pyq_v6',
+  ALERTS_ON: 'cg_verto_alerts_v6',
   SGPA_ROWS: 'cg_verto_sgpa_v5',
   POMO_DONE: 'cg_verto_pomo_v5',
   EXAMS: 'cg_touch_exams_v3',
+  BUDGET: 'cg_verto_budget_v6',
   LAUNDRY: 'cg_verto_laundry_v5',
   KHATA: 'cg_verto_khata_v5',
+  BAZAAR: 'cg_verto_bazaar_v6',
+  LOSTFOUND: 'cg_verto_lostfound_v6',
+  MESS_POLL: 'cg_verto_messpoll_v6',
   GATEPASSES: 'cg_touch_gatepasses_v3',
   RMS: 'cg_touch_rms_v3',
   REBATES: 'cg_mess_rebates_v3',
   SCANS: 'cg_touch_mess_scans_v3'
 };
+
+const CLOUD_FEED_TOPIC = 'lpu_campusgrid_v6_verto_community_hub';
 
 const THEME_ORDER = ['light', 'ocean', 'mint', 'dark'];
 const THEME_LABELS = {
@@ -95,6 +105,16 @@ const DEFAULT_TASKS = [
   { id: 'k4', code: 'CSE326', type: 'CA-1', title: 'Responsive Portfolio UI Submission', due: '2026-10-28', done: true }
 ];
 
+const BUILTIN_PYQ_BANK = [
+  { id: 'p1', code: 'CSE205', title: 'Data Structures & Algorithms', pattern: 'MTE: 30M MCQ+Code • ETE: 50M (Units 1–6)', topics: 'AVL Rotations, Heap Sort, Dijkstra/MST, Hashing Collisions, Stack Infix-Postfix, Linked List Reversal', link: '' },
+  { id: 'p2', code: 'CSE316', title: 'Operating Systems', pattern: 'MTE: Units 1–3 • ETE: 50M Numerical + Theory', topics: 'SRTF/Round Robin Gantt Chart, Banker’s Deadlock Algorithm, Semaphores, LRU/Optimal Page Replacement, Disk SSTF/SCAN', link: '' },
+  { id: 'p3', code: 'INT254', title: 'Foundations of Machine Learning', pattern: 'MTE: 40M MCQ • ETE: 50M Case + Math', topics: 'Gradient Descent, Confusion Matrix/F1-Score, KNN, Entropy & ID3 Decision Tree, K-Means, PCA & Overfitting/L1-L2', link: '' },
+  { id: 'p4', code: 'CSE111', title: 'Programming in C / Python Core', pattern: 'OAS Practical + 50M End-Term Coding', topics: 'Pointers & Structs, Recursion, File Handling, Dynamic Memory (malloc/calloc), String Manipulation & Matrix Loops', link: '' },
+  { id: 'p5', code: 'MTH401', title: 'Probability & Statistics', pattern: 'MTE: 30M • ETE: 50M Formula Numericals', topics: 'Bayes Theorem, Binomial/Poisson/Normal Distribution, Z-Test & T-Test Hypothesis, Chi-Square, Karl Pearson Correlation', link: '' },
+  { id: 'p6', code: 'ECE249', title: 'Basic Electrical & Electronics', pattern: 'MTE: Units 1–3 • ETE: Circuit Numericals', topics: 'Thevenin & Norton Theorem, Nodal/Mesh KVL-KCL, Op-Amp Adder/Integrator, BJT Biasing, Logic Gates & Flip-Flops', link: '' },
+  { id: 'p7', code: 'PES318', title: 'Soft Skills & PEP Placement Prep', pattern: 'CA Presentation + Mock Interview + Verbal', topics: 'STAR Interview Method, Group Discussion Frameworks, Para-Jumbles, Time & Work / Blood Relations Aptitude', link: '' }
+];
+
 const DEFAULT_SGPA_ROWS = [
   { id: 'g1', code: 'CSE316', credits: 4, gp: 9 },
   { id: 'g2', code: 'INT254', credits: 4, gp: 9 },
@@ -108,6 +128,29 @@ const DEFAULT_EXAMS = [
   { id: 'e1', code: 'CSE316', subject: 'Operating Systems', examType: 'End-Term (ETE)', date: '2026-11-24', time: '09:30 AM - 12:30 PM', room: '34-308', seat: 'Row 3 • Seat 14' },
   { id: 'e2', code: 'INT254', subject: 'Foundations of Machine Learning', examType: 'End-Term (ETE)', date: '2026-11-27', time: '09:30 AM - 12:30 PM', room: '32-402', seat: 'Row 1 • Seat 06' },
   { id: 'e3', code: 'CSE205', subject: 'Data Structures & Algorithms', examType: 'End-Term (ETE)', date: '2026-11-30', time: '01:30 PM - 04:30 PM', room: '33-501', seat: 'Row 5 • Seat 22' }
+];
+
+const DEFAULT_BUDGET = {
+  monthlyLimit: 6000,
+  expenses: [
+    { id: 'ex1', cat: 'Food/Cafe', note: 'UniMall Cold Coffee & Wrap', amount: 180, date: 'Today' },
+    { id: 'ex2', cat: 'Study/Print', note: 'Lab Manual Printout Block 32', amount: 120, date: 'Yesterday' },
+    { id: 'ex3', cat: 'Auto/Travel', note: 'Phagwara Station Auto Share', amount: 150, date: '2d ago' }
+  ]
+};
+
+const DEFAULT_BAZAAR = [
+  { id: 'bz1', title: 'Casio fx-991ES Plus Scientific Calculator', price: 480, cat: 'Electronics', hostel: 'BH-4', seller: 'Harsh (3rd Yr)', phone: '9876543210', time: '2h ago' },
+  { id: 'bz2', title: 'Prestige 1.5L Electric Kettle (Like New)', price: 390, cat: 'Electronics', hostel: 'BH-5', seller: 'Aditya', phone: '9876501234', time: '4h ago' },
+  { id: 'bz3', title: 'Mini Drafter + Sheet Holder Tube (ME/Civil)', price: 220, cat: 'Books & Lab', hostel: 'BH-2', seller: 'Karan', phone: '9876512345', time: 'Yesterday' },
+  { id: 'bz4', title: 'White Lab Coat (Size L — Biotech / Chem)', price: 160, cat: 'Books & Lab', hostel: 'GH-3', seller: 'Ananya', phone: '9876523456', time: 'Yesterday' },
+  { id: 'bz5', title: 'Hero Sprint Geared Campus Cycle + Lock', price: 2400, cat: 'Cycle & Gear', hostel: 'BH-6', seller: 'Vikram (4th Yr)', phone: '9876534567', time: '2d ago' }
+];
+
+const DEFAULT_LOSTFOUND = [
+  { id: 'lf1', kind: 'LOST', item: 'Black boAt Airdopes Charging Case', where: 'Block 32 Room 405 / Underpass', poster: 'Rohan (BH-4)', phone: '9876543210', time: '1h ago' },
+  { id: 'lf2', kind: 'FOUND', item: 'Blue Milton Thermosteel Bottle (1L)', where: 'Central Library (Block 13) 3rd Floor Desk', poster: 'Simran (GH-2)', phone: '9876509876', time: '3h ago' },
+  { id: 'lf3', kind: 'FOUND', item: 'LPU Student ID Card (B.Tech CSE 1st Yr)', where: 'UniMall Food Court Billing Counter', poster: 'Aakash', phone: '9876598765', time: 'Yesterday' }
 ];
 
 const DEFAULT_LAUNDRY = {
@@ -184,10 +227,16 @@ let profile = {};
 let subjects = [];
 let timetable = {};
 let tasks = [];
+let customPyqs = [];
+let alertsEnabled = false;
 let sgpaRows = [];
 let exams = [];
+let budget = {};
 let laundry = {};
 let khataList = [];
+let bazaarItems = [];
+let lostFoundItems = [];
+let messPoll = {};
 let gatePasses = [];
 let rmsTickets = [];
 let rebates = [];
@@ -198,6 +247,7 @@ let selectedTtDay = 'Monday';
 let selectedMessDay = 'monday';
 let selectedCampusCat = 'all';
 let deferredInstallPrompt = null;
+let pendingSyncPayload = null;
 
 // Pomodoro Timer State
 let pomoModeMins = 25;
@@ -219,6 +269,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   calcLpuGrade();
   calcQuickSplit();
+  calcOdMedical();
+  calcPlacementEligibility();
+  checkIncomingSectionSync();
+  pullLiveCommunityCloud();
 
   updateQrClock();
   setInterval(updateQrClock, 1000);
@@ -240,10 +294,16 @@ function loadState() {
   subjects = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBJECTS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
   timetable = JSON.parse(localStorage.getItem(STORAGE_KEYS.TIMETABLE) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TIMETABLE));
   tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TASKS));
+  customPyqs = JSON.parse(localStorage.getItem(STORAGE_KEYS.PYQ_CUSTOM) || 'null') || [];
+  alertsEnabled = localStorage.getItem(STORAGE_KEYS.ALERTS_ON) === '1';
   sgpaRows = JSON.parse(localStorage.getItem(STORAGE_KEYS.SGPA_ROWS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_SGPA_ROWS));
   exams = JSON.parse(localStorage.getItem(STORAGE_KEYS.EXAMS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_EXAMS));
+  budget = JSON.parse(localStorage.getItem(STORAGE_KEYS.BUDGET) || 'null') || JSON.parse(JSON.stringify(DEFAULT_BUDGET));
   laundry = JSON.parse(localStorage.getItem(STORAGE_KEYS.LAUNDRY) || 'null') || { ...DEFAULT_LAUNDRY };
   khataList = JSON.parse(localStorage.getItem(STORAGE_KEYS.KHATA) || 'null') || JSON.parse(JSON.stringify(DEFAULT_KHATA));
+  bazaarItems = JSON.parse(localStorage.getItem(STORAGE_KEYS.BAZAAR) || 'null') || JSON.parse(JSON.stringify(DEFAULT_BAZAAR));
+  lostFoundItems = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOSTFOUND) || 'null') || JSON.parse(JSON.stringify(DEFAULT_LOSTFOUND));
+  messPoll = JSON.parse(localStorage.getItem(STORAGE_KEYS.MESS_POLL) || 'null') || { good: 48, okay: 11, skip: 6, votedSlot: '' };
   gatePasses = JSON.parse(localStorage.getItem(STORAGE_KEYS.GATEPASSES) || 'null') || JSON.parse(JSON.stringify(DEFAULT_GATEPASSES));
   rmsTickets = JSON.parse(localStorage.getItem(STORAGE_KEYS.RMS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_RMS));
   rebates = JSON.parse(localStorage.getItem(STORAGE_KEYS.REBATES) || 'null') || (typeof DEFAULT_REBATES !== 'undefined' ? JSON.parse(JSON.stringify(DEFAULT_REBATES)) : []);
@@ -252,10 +312,14 @@ function loadState() {
 }
 
 function renderAll() {
+  renderBudgetUI();
+  renderMessPollUI();
   renderProfileAndHome();
   renderAttendance();
   renderTimetable();
   renderTasks();
+  renderPyqBank();
+  renderAlertsUI();
   renderPomodoroUI();
   renderSgpaCalculator();
   renderExams();
@@ -263,14 +327,158 @@ function renderAll() {
   renderMessQr();
   renderCafes();
   renderRebates();
+  renderBazaarList();
+  renderLostFoundList();
   renderCampusDirectory();
   renderLaundryUI();
   renderKhataList();
   renderHolidaysList();
   renderCabinsList();
   renderRmsList();
-  renderRulesList();
   renderGatePasses();
+}
+
+// ================= LEVEL 1 #1: 1-CLICK SECTION TIMETABLE SHARE & AUTO-IMPORT =================
+function encodeUtf8Base64Url(obj) {
+  const json = JSON.stringify(obj);
+  const bytes = new TextEncoder().encode(json);
+  let bin = '';
+  bytes.forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function decodeUtf8Base64Url(str) {
+  let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+  while (b64.length % 4) b64 += '=';
+  const bin = atob(b64);
+  const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function shareSectionSyncLink() {
+  const compactPayload = {
+    sec: profile.section || 'LPU',
+    prog: profile.program || 'B.Tech',
+    subs: subjects.map((s) => ({ c: s.code, n: s.name, f: s.faculty, r: s.room })),
+    tt: timetable
+  };
+  const token = encodeUtf8Base64Url(compactPayload);
+  const baseUrl = window.location.origin + window.location.pathname;
+  const syncUrl = `${baseUrl}?sec_sync=${token}`;
+  const msg = `📚 *LPU Section ${compactPayload.sec} Timetable & Subjects*\nTap this link to auto-import all classes & subjects into CampusGrid in 1 click:\n${syncUrl}`;
+
+  if (navigator.share) {
+    navigator.share({ title: `Section ${compactPayload.sec} Timetable`, text: msg, url: syncUrl }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(() => showToast(`Section ${compactPayload.sec} sync link copied!`));
+  }
+}
+
+function checkIncomingSectionSync() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('sec_sync');
+    if (!raw) return;
+    const data = decodeUtf8Base64Url(raw);
+    if (!data || !data.tt) return;
+    pendingSyncPayload = data;
+    setText(
+      'sync-import-desc',
+      `Your classmate shared Section "${data.sec}" (${data.prog}) with ${(data.subs || []).length} subjects and full Mon–Sat timetable. Import into your phone?`
+    );
+    openSheet('sheet-import-sync');
+  } catch (e) {}
+}
+
+function confirmSectionSyncImport() {
+  if (!pendingSyncPayload) return;
+  profile.section = pendingSyncPayload.sec || profile.section;
+  profile.program = pendingSyncPayload.prog || profile.program;
+
+  if (Array.isArray(pendingSyncPayload.subs) && pendingSyncPayload.subs.length > 0) {
+    const prevMap = {};
+    subjects.forEach((s) => { prevMap[s.code] = s; });
+    subjects = pendingSyncPayload.subs.map((item, idx) => {
+      const old = prevMap[item.c];
+      return {
+        id: 's_imp_' + idx + '_' + Date.now(),
+        code: item.c,
+        name: item.n,
+        faculty: item.f || 'Faculty',
+        room: item.r || '-',
+        attended: old ? old.attended : 10,
+        total: old ? old.total : 12
+      };
+    });
+    localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  }
+
+  timetable = pendingSyncPayload.tt;
+  localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable));
+  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+
+  pendingSyncPayload = null;
+  closeSheet('sheet-import-sync');
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  renderAll();
+  showToast(`Imported Section ${profile.section} Timetable!`);
+}
+
+// ================= LEVEL 2 HYBRID CLOUD SYNC (NON-BLOCKING) =================
+async function pushCloudEvent(eventObj) {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3500);
+    await fetch(`https://ntfy.sh/${CLOUD_FEED_TOPIC}`, {
+      method: 'POST',
+      body: JSON.stringify(eventObj),
+      signal: ctrl.signal
+    });
+    clearTimeout(timer);
+  } catch (e) {
+    // Gracefully ignored if campus Sophos firewall blocks external pubsub
+  }
+}
+
+async function pullLiveCommunityCloud() {
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 3500);
+    const resp = await fetch(`https://ntfy.sh/${CLOUD_FEED_TOPIC}/json?poll=1&since=72h`, { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (!resp.ok) return;
+    const text = await resp.text();
+    const lines = text.trim().split('\n').filter(Boolean);
+
+    let changed = false;
+    lines.forEach((line) => {
+      try {
+        const env = JSON.parse(line);
+        if (!env.message) return;
+        const ev = JSON.parse(env.message);
+        if (ev.kind === 'bazaar' && ev.item && !bazaarItems.some((x) => x.id === ev.item.id)) {
+          bazaarItems.unshift(ev.item);
+          changed = true;
+        } else if (ev.kind === 'lostfound' && ev.item && !lostFoundItems.some((x) => x.id === ev.item.id)) {
+          lostFoundItems.unshift(ev.item);
+          changed = true;
+        } else if (ev.kind === 'poll' && ev.choice && messPoll[ev.choice] !== undefined) {
+          messPoll[ev.choice] += 1;
+          changed = true;
+        }
+      } catch (_) {}
+    });
+
+    if (changed) {
+      localStorage.setItem(STORAGE_KEYS.BAZAAR, JSON.stringify(bazaarItems.slice(0, 40)));
+      localStorage.setItem(STORAGE_KEYS.LOSTFOUND, JSON.stringify(lostFoundItems.slice(0, 40)));
+      renderBazaarList();
+      renderLostFoundList();
+      renderMessPollUI();
+    }
+  } catch (e) {}
 }
 
 // ================= THEME SYSTEM =================
@@ -321,7 +529,7 @@ function switchSubTab(group, sub) {
   const map = {
     classes: { prefix: 'cls', items: ['attendance', 'timetable', 'tasks', 'exams'] },
     mess: { prefix: 'mess', items: ['menu', 'qr', 'cafes', 'rebate'] },
-    campus: { prefix: 'cmp', items: ['blocks', 'hostel', 'cabins', 'rms'] }
+    campus: { prefix: 'cmp', items: ['bazaar', 'hostel', 'blocks', 'rms'] }
   };
   const cfg = map[group];
   if (!cfg) return;
@@ -343,7 +551,7 @@ function openQuickMealQr() {
   jumpTo('mess', 'qr');
 }
 
-// ================= GOOGLE MAPS DIRECT LINK HELPER (NO IN-APP MAP) =================
+// ================= GOOGLE MAPS DIRECT LINK HELPER =================
 function buildGoogleMapsUrl(queryOrCoords) {
   if (Array.isArray(queryOrCoords) && queryOrCoords.length === 2) {
     return `https://www.google.com/maps/search/?api=1&query=${queryOrCoords[0]},${queryOrCoords[1]}`;
@@ -386,6 +594,9 @@ function renderProfileAndHome() {
   const pctStr = pct.toFixed(1) + '%';
   const pendingCas = tasks.filter((t) => !t.done);
 
+  const spent = (budget.expenses || []).reduce((acc, x) => acc + Number(x.amount || 0), 0);
+  const left = Math.max(0, Number(budget.monthlyLimit || 6000) - spent);
+
   setText('top-sec-pill', profile.section || 'LPU');
   setText('top-greeting', `Hi, ${String(profile.name || 'Verto').split(' ')[0]} • Reg ${profile.regNo}`);
 
@@ -396,6 +607,7 @@ function renderProfileAndHome() {
   setText('home-prog', profile.program);
   setText('home-att-pct', pctStr);
   setText('home-cgpa', profile.cgpa || '8.50');
+  setText('home-budget-left', `₹${left}`);
   setText('home-ca-count', `${pendingCas.length} Due`);
 
   const dot = document.getElementById('home-att-dot');
@@ -431,7 +643,6 @@ function renderProfileAndHome() {
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayName = dayNames[jsDay];
   const todayList = timetable[todayName] || [];
-  setText('home-today-count', `${todayList.length} Cls`);
   setText('home-day-sub', todayName === 'Sunday' ? 'Sunday — No regular classes' : `${todayName} • Section ${profile.section}`);
 
   const clsBox = document.getElementById('home-classes-list');
@@ -508,7 +719,7 @@ function renderProfileAndHome() {
   setText('prof-barcode-lbl', `*LPU-${profile.regNo}*`);
 }
 
-// ================= ATTENDANCE TRACKER =================
+// ================= ATTENDANCE + OD / MEDICAL 65%-75% RELAXER =================
 function lpuAttBonusMarks(pct) {
   if (pct >= 90) return '5/5 Bonus Marks';
   if (pct >= 85) return '4/5 Bonus Marks';
@@ -646,6 +857,26 @@ function deleteSubject(subId) {
   showToast('Subject removed');
 }
 
+function calcOdMedical() {
+  const att = Math.max(0, parseInt(document.getElementById('inp-od-att')?.value || '0', 10) || 0);
+  const tot = Math.max(1, parseInt(document.getElementById('inp-od-tot')?.value || '1', 10) || 1);
+  const od = Math.max(0, parseInt(document.getElementById('inp-od-credit')?.value || '0', 10) || 0);
+  const eff = Math.min(100, ((att + od) / tot) * 100);
+
+  const box = document.getElementById('out-od-box');
+  if (!box) return;
+  let status = '';
+  if (eff >= 75) {
+    status = `✅ Effective UMS Attendance: ${eff.toFixed(1)}% — Clear for ETE (>=75% Regular Eligible!)`;
+  } else if (eff >= 65) {
+    status = `⚠️ Effective UMS Attendance: ${eff.toFixed(1)}% — Eligible ONLY under 10% Uni-Hospital Medical Relaxation (65%–74.9%).`;
+  } else {
+    const need = Math.max(1, Math.ceil((0.75 * tot - (att + od)) / 0.25));
+    status = `🚨 Effective: ${eff.toFixed(1)}% (Below 65% Detain Cutoff). Need +${need} continuous classes for 75%.`;
+  }
+  box.textContent = status;
+}
+
 // ================= TIMETABLE =================
 function renderTimetable() {
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -723,7 +954,85 @@ function deleteClassSlot(day, id) {
   showToast('Class removed');
 }
 
-// ================= CA / ASSIGNMENT TRACKER & POMODORO FOCUS TIMER =================
+// ================= LEVEL 1 #2 & #5: PYQ BANK, CA TRACKER, SMART ALERTS & POMODORO =================
+function renderAlertsUI() {
+  const icon = document.getElementById('top-alert-icon');
+  const btn = document.getElementById('btn-enable-alerts');
+  const sub = document.getElementById('alert-status-sub');
+  if (alertsEnabled) {
+    if (icon) icon.className = 'fa-solid fa-bell text-sm text-[var(--accent)]';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-check mr-1"></i>Active';
+    if (sub) sub.textContent = 'Smart reminders active for upcoming lectures & CAs!';
+  } else {
+    if (icon) icon.className = 'fa-regular fa-bell text-sm text-[var(--text-main)]';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-bell mr-1"></i>Enable';
+  }
+}
+
+function enableSmartAlerts() {
+  const pending = tasks.filter((t) => !t.done);
+  const jsDay = new Date().getDay();
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayCls = timetable[dayNames[jsDay]] || [];
+  const summary = `${todayCls.length} classes today • ${pending.length} pending CAs`;
+
+  if ('Notification' in window) {
+    Notification.requestPermission().then((perm) => {
+      alertsEnabled = true;
+      localStorage.setItem(STORAGE_KEYS.ALERTS_ON, '1');
+      renderAlertsUI();
+      if (perm === 'granted') {
+        new Notification('CampusGrid Smart Reminder 🔔', {
+          body: summary + (pending[0] ? ` (Next due: ${pending[0].code} ${pending[0].type})` : '')
+        });
+      }
+      showToast('Smart Alerts Active: ' + summary);
+    });
+  } else {
+    alertsEnabled = true;
+    localStorage.setItem(STORAGE_KEYS.ALERTS_ON, '1');
+    renderAlertsUI();
+    showToast('Alerts Enabled: ' + summary);
+  }
+}
+
+function renderPyqBank() {
+  const box = document.getElementById('pyq-list-container');
+  if (!box) return;
+  const q = (document.getElementById('pyq-search-inp')?.value || '').trim().toLowerCase();
+  const allNotes = [...customPyqs, ...BUILTIN_PYQ_BANK];
+  const filtered = allNotes.filter((p) => !q || `${p.code} ${p.title} ${p.topics}`.toLowerCase().includes(q));
+
+  box.innerHTML = filtered.map((p) => `
+    <div class="app-card-muted p-3 space-y-1.5">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5">
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(p.code)}</span>
+          <span class="text-xs font-extrabold text-[var(--text-main)]">${esc(p.title)}</span>
+        </div>
+        ${p.link ? `<a href="${esc(p.link)}" target="_blank" rel="noopener" class="px-2 py-0.5 rounded bg-[var(--surface)] border border-[var(--border)] text-[10px] font-bold text-[var(--accent)] no-underline shrink-0">Open PDF ↗</a>` : ''}
+      </div>
+      <p class="text-[10px] font-bold text-[var(--text-sub)]">${esc(p.pattern)}</p>
+      <p class="text-[11px] text-[var(--text-main)] leading-snug"><strong>Repeated Topics:</strong> ${esc(p.topics)}</p>
+    </div>
+  `).join('');
+}
+
+function saveCustomPyq() {
+  const code = (val('inp-pyq-code') || 'LPU101').toUpperCase();
+  const pattern = val('inp-pyq-pattern') || 'MTE & ETE Notes';
+  const title = val('inp-pyq-title');
+  const topics = val('inp-pyq-topics') || 'Important unit notes & PYQ link';
+  const link = val('inp-pyq-link');
+  if (!title) return showToast('Enter subject title');
+
+  customPyqs.unshift({ id: 'cp_' + Date.now(), code, title, pattern, topics, link });
+  localStorage.setItem(STORAGE_KEYS.PYQ_CUSTOM, JSON.stringify(customPyqs));
+  closeSheet('sheet-add-pyq');
+  renderPyqBank();
+  showToast('Saved to PYQ Vault!');
+}
+
 function renderTasks() {
   const box = document.getElementById('tasks-full-list');
   if (!box) return;
@@ -848,6 +1157,46 @@ function renderPomodoroUI() {
       ? '<i class="fa-solid fa-pause mr-1.5"></i>Pause'
       : '<i class="fa-solid fa-play mr-1.5"></i>Start Focus';
   }
+}
+
+// ================= LEVEL 1 #4: BLOCK 32 PLACEMENT TIER ELIGIBILITY CHECKER =================
+function calcPlacementEligibility() {
+  const p10 = parseFloat(document.getElementById('inp-pl-10')?.value || '0') || 0;
+  const p12 = parseFloat(document.getElementById('inp-pl-12')?.value || '0') || 0;
+  const cg = parseFloat(document.getElementById('inp-pl-cgpa')?.value || '0') || 0;
+  const back = parseInt(document.getElementById('inp-pl-back')?.value || '0', 10) || 0;
+
+  const tiers = [
+    {
+      name: 'Super Dream Product (₹20–64 LPA)',
+      ok: back === 0 && cg >= 8.0 && p10 >= 70 && p12 >= 70,
+      req: 'Needs >=8.0 CGPA, 0 Backlogs, >=70% in 10th/12th'
+    },
+    {
+      name: 'Dream Tech & FinTech (₹8–18 LPA)',
+      ok: back === 0 && cg >= 7.0 && p10 >= 60 && p12 >= 60,
+      req: 'Needs >=7.0 CGPA, 0 Backlogs, >=60% in 10th/12th'
+    },
+    {
+      name: 'Day-1 Prime & Mass Drives (₹4–7.5 LPA)',
+      ok: back === 0 && cg >= 6.0,
+      req: 'Needs >=6.0 CGPA & 0 Active Backlogs'
+    }
+  ];
+
+  const box = document.getElementById('out-placement-tiers');
+  if (!box) return;
+  box.innerHTML = tiers.map((t) => `
+    <div class="app-card-muted p-2.5 flex items-center justify-between gap-2">
+      <div class="min-w-0">
+        <span class="text-xs font-extrabold text-[var(--text-main)] block truncate">${esc(t.name)}</span>
+        <span class="text-[10px] text-[var(--text-sub)] block truncate">${esc(t.req)}</span>
+      </div>
+      <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0 ${t.ok ? 'bg-emerald-500/15 text-emerald-600' : 'bg-rose-500/15 text-rose-500'}">
+        ${t.ok ? '✓ Eligible' : '✗ Locked'}
+      </span>
+    </div>
+  `).join('');
 }
 
 // ================= MULTI-SUBJECT SGPA & CGPA CALCULATOR =================
@@ -1001,6 +1350,55 @@ function calcLpuGrade() {
   else if (total >= 40) grade = 'P (4 GP)';
 
   setText('grade-letter-out', grade);
+}
+
+// ================= LEVEL 2 #8: LIVE "AAJ MESS KAISA BANA HAI?" POLL =================
+function currentMealSlotId() {
+  const d = new Date().toISOString().slice(0, 10);
+  const meal = typeof getCurrentMealInfo === 'function' ? getCurrentMealInfo().name : 'Meal';
+  return `${d}_${meal}`;
+}
+
+function renderMessPollUI() {
+  const g = Number(messPoll.good || 0);
+  const o = Number(messPoll.okay || 0);
+  const s = Number(messPoll.skip || 0);
+  const tot = Math.max(1, g + o + s);
+  const pg = Math.round((g / tot) * 100);
+  const po = Math.round((o / tot) * 100);
+  const ps = Math.max(0, 100 - pg - po);
+
+  const mealName = typeof getCurrentMealInfo === 'function' ? getCurrentMealInfo().name : 'Hostel Meal';
+  setText('poll-meal-heading', `Aaj ${profile.hostel || 'Hostel'} ${mealName} Kaisa Hai?`);
+  setText('poll-total-votes', `${tot} Verto votes`);
+  setText('pct-poll-good', `${pg}%`);
+  setText('pct-poll-okay', `${po}%`);
+  setText('pct-poll-skip', `${ps}%`);
+
+  const bg = document.getElementById('bar-poll-good');
+  const bo = document.getElementById('bar-poll-okay');
+  const bs = document.getElementById('bar-poll-skip');
+  if (bg) bg.style.width = `${pg}%`;
+  if (bo) bo.style.width = `${po}%`;
+  if (bs) bs.style.width = `${ps}%`;
+
+  const mini = document.getElementById('home-poll-mini');
+  if (mini) {
+    mini.innerHTML = `<span>Live Verto Poll: <strong class="text-emerald-600">🔥 ${pg}% Mast</strong> • 💀 ${ps}% Skip</span><span>${tot} votes</span>`;
+  }
+}
+
+function voteMessPoll(choice) {
+  const slot = currentMealSlotId();
+  if (messPoll.votedSlot === slot) {
+    return showToast('Already voted for this meal!');
+  }
+  messPoll[choice] = Number(messPoll[choice] || 0) + 1;
+  messPoll.votedSlot = slot;
+  localStorage.setItem(STORAGE_KEYS.MESS_POLL, JSON.stringify(messPoll));
+  renderMessPollUI();
+  pushCloudEvent({ kind: 'poll', choice, slot });
+  showToast('Vote counted! 🔥');
 }
 
 // ================= MESS MENU, QR, CAFES & REBATE =================
@@ -1157,6 +1555,214 @@ function submitMessRebate() {
   showToast('Mess rebate submitted');
 }
 
+// ================= LEVEL 2 #6 & #7: VERTO BAZAAR (OLX) & LOST AND FOUND =================
+function switchBazaarMode(mode) {
+  const isMarket = mode === 'market';
+  const mBtn = document.getElementById('bz-mode-market');
+  const lBtn = document.getElementById('bz-mode-lost');
+  const mView = document.getElementById('view-bazaar-market');
+  const lView = document.getElementById('view-bazaar-lost');
+
+  if (mBtn) mBtn.className = `py-2.5 px-3 rounded-xl font-extrabold text-xs tap-scale ${isMarket ? 'btn-accent' : 'btn-neutral'}`;
+  if (lBtn) lBtn.className = `py-2.5 px-3 rounded-xl font-extrabold text-xs tap-scale ${!isMarket ? 'btn-accent' : 'btn-neutral'}`;
+  if (mView) mView.classList.toggle('hidden', !isMarket);
+  if (lView) lView.classList.toggle('hidden', isMarket);
+}
+
+function cleanPhoneForWa(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (!digits) return '';
+  return digits.length === 10 ? '91' + digits : digits;
+}
+
+function renderBazaarList() {
+  const box = document.getElementById('bazaar-items-list');
+  if (!box) return;
+
+  box.innerHTML = bazaarItems.map((b) => {
+    const waPhone = cleanPhoneForWa(b.phone);
+    const waMsg = encodeURIComponent(`Hi ${b.seller || 'Verto'}, saw your "${b.title}" (₹${b.price}) on CampusGrid Verto Bazaar. Is it still available?`);
+    const waHref = waPhone ? `https://wa.me/${waPhone}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
+
+    return `
+      <div class="app-card p-3.5 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(b.cat)} • ${esc(b.hostel)}</span>
+            <h4 class="text-[13px] font-extrabold text-[var(--text-main)] mt-1 leading-snug">${esc(b.title)}</h4>
+          </div>
+          <span class="text-base font-extrabold text-emerald-600 shrink-0">₹${esc(b.price)}</span>
+        </div>
+        <div class="flex items-center justify-between pt-0.5 text-[11px]">
+          <span class="text-[var(--text-sub)]"><i class="fa-regular fa-user mr-1"></i>${esc(b.seller)} • ${esc(b.time || 'Just now')}</span>
+          <a href="${waHref}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-700 font-extrabold no-underline tap-scale">
+            <i class="fa-brands fa-whatsapp mr-1"></i>Buy / Chat
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function submitBazaarItem() {
+  const title = val('inp-bz-title');
+  const price = parseInt(val('inp-bz-price') || '0', 10);
+  const cat = val('inp-bz-cat') || 'Hostel Essentials';
+  const hostel = val('inp-bz-hostel') || profile.hostel || 'BH-4';
+  const phone = val('inp-bz-phone');
+  if (!title || price <= 0) return showToast('Enter item name & ₹ price');
+
+  const newItem = {
+    id: 'bz_' + Date.now(),
+    title,
+    price,
+    cat,
+    hostel,
+    seller: profile.name.split(' ')[0] || 'Verto',
+    phone,
+    time: 'Just now'
+  };
+  bazaarItems.unshift(newItem);
+  localStorage.setItem(STORAGE_KEYS.BAZAAR, JSON.stringify(bazaarItems));
+  closeSheet('sheet-sell-item');
+  renderBazaarList();
+  pushCloudEvent({ kind: 'bazaar', item: newItem });
+  showToast('Listed on Verto Bazaar!');
+}
+
+function renderLostFoundList() {
+  const box = document.getElementById('lostfound-items-list');
+  if (!box) return;
+
+  box.innerHTML = lostFoundItems.map((lf) => {
+    const isLost = lf.kind === 'LOST';
+    const waPhone = cleanPhoneForWa(lf.phone);
+    const waMsg = encodeURIComponent(`Hi ${lf.poster || 'Verto'}, contacting regarding your ${lf.kind} post on CampusGrid: "${lf.item}" (${lf.where}).`);
+    const waHref = waPhone ? `https://wa.me/${waPhone}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
+
+    return `
+      <div class="app-card p-3.5 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold ${isLost ? 'bg-rose-500/15 text-rose-600' : 'bg-emerald-500/15 text-emerald-600'}">
+              ${isLost ? '🚨 LOST' : '✅ FOUND'}
+            </span>
+            <h4 class="text-[13px] font-extrabold text-[var(--text-main)] mt-1">${esc(lf.item)}</h4>
+            <p class="text-[11px] text-[var(--text-sub)] mt-0.5"><i class="fa-solid fa-location-dot text-[var(--accent)] mr-1"></i>${esc(lf.where)}</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-0.5 text-[11px]">
+          <span class="text-[var(--text-sub)]">By ${esc(lf.poster)} • ${esc(lf.time)}</span>
+          <a href="${waHref}" target="_blank" rel="noopener" class="px-2.5 py-1.5 btn-soft text-[11px] no-underline tap-scale">
+            <i class="fa-brands fa-whatsapp mr-1"></i>Contact
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function submitLostFoundItem() {
+  const kind = val('inp-lf-kind') || 'LOST';
+  const item = val('inp-lf-item');
+  const where = val('inp-lf-where') || 'LPU Campus';
+  const phone = val('inp-lf-phone');
+  if (!item) return showToast('Enter lost/found item details');
+
+  const newEntry = {
+    id: 'lf_' + Date.now(),
+    kind,
+    item,
+    where,
+    poster: `${profile.name.split(' ')[0]} (${profile.hostel})`,
+    phone,
+    time: 'Just now'
+  };
+  lostFoundItems.unshift(newEntry);
+  localStorage.setItem(STORAGE_KEYS.LOSTFOUND, JSON.stringify(lostFoundItems));
+  closeSheet('sheet-post-lost');
+  renderLostFoundList();
+  pushCloudEvent({ kind: 'lostfound', item: newEntry });
+  showToast('Lost & Found Alert Posted!');
+}
+
+// ================= LEVEL 1 #3: MONTHLY POCKET-MONEY BUDGET TRACKER =================
+function renderBudgetUI() {
+  const limit = Math.max(100, Number(budget.monthlyLimit || 6000));
+  const list = budget.expenses || [];
+  const spent = list.reduce((s, x) => s + Number(x.amount || 0), 0);
+  const left = Math.max(0, limit - spent);
+  const pct = Math.min(100, Math.round((spent / limit) * 100));
+
+  const now = new Date();
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const remDays = Math.max(1, daysInMonth - now.getDate() + 1);
+  const dailySafe = Math.floor(left / remDays);
+
+  setText('bgt-total', `₹${limit}`);
+  setText('bgt-spent', `₹${spent}`);
+  setText('bgt-left', `₹${left}`);
+  setText('budget-daily-safe', `Safe daily spend: ₹${dailySafe} / day (${remDays}d left)`);
+
+  const bar = document.getElementById('bgt-bar');
+  if (bar) {
+    bar.style.width = `${pct}%`;
+    bar.style.background = pct > 85 ? '#ef4444' : 'var(--accent)';
+  }
+
+  const box = document.getElementById('expenses-recent-list');
+  if (box) {
+    box.innerHTML = list.slice(0, 5).map((e) => `
+      <div class="app-card-muted p-2 flex items-center justify-between text-xs">
+        <div class="min-w-0 truncate">
+          <span class="font-bold text-[var(--text-main)]">${esc(e.note)}</span>
+          <span class="text-[10px] text-[var(--text-sub)] ml-1">(${esc(e.cat)})</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span class="font-extrabold text-rose-500">-₹${e.amount}</span>
+          <button onclick="deletePocketExpense('${e.id}')" class="text-[10px] text-[var(--text-faint)] bg-transparent border-0 cursor-pointer">✕</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function promptMonthlyBudget() {
+  const input = prompt('Set Monthly Pocket-Money Budget (₹):', String(budget.monthlyLimit || 6000));
+  if (!input) return;
+  const valNum = parseInt(input, 10);
+  if (valNum > 0) {
+    budget.monthlyLimit = valNum;
+    localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budget));
+    renderBudgetUI();
+    renderProfileAndHome();
+    showToast(`Budget set to ₹${valNum}`);
+  }
+}
+
+function addPocketExpense() {
+  const cat = val('inp-exp-cat') || 'Food/Cafe';
+  const note = val('inp-exp-note') || cat;
+  const amount = parseInt(val('inp-exp-amt') || '0', 10);
+  if (amount <= 0) return showToast('Enter ₹ amount');
+
+  if (!budget.expenses) budget.expenses = [];
+  budget.expenses.unshift({ id: 'ex_' + Date.now(), cat, note, amount, date: 'Today' });
+  localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budget));
+  setVal('inp-exp-note', '');
+  setVal('inp-exp-amt', '');
+  renderBudgetUI();
+  renderProfileAndHome();
+  showToast(`Logged ₹${amount}`);
+}
+
+function deletePocketExpense(id) {
+  budget.expenses = (budget.expenses || []).filter((x) => x.id !== id);
+  localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budget));
+  renderBudgetUI();
+  renderProfileAndHome();
+}
+
 // ================= CAMPUS DIRECTORY (OFFICIAL MAP LINKS ONLY) =================
 function setCampusCat(cat) {
   selectedCampusCat = cat;
@@ -1260,7 +1866,6 @@ function saveLaundryConfig() {
   showToast('Laundry card updated');
 }
 
-// Roommate Bill Splitter & Khata
 function calcQuickSplit() {
   const total = Math.max(0, parseFloat(document.getElementById('inp-split-total')?.value || '0') || 0);
   const heads = Math.max(1, parseInt(document.getElementById('inp-split-heads')?.value || '2', 10) || 2);
@@ -1328,7 +1933,7 @@ function shareCabPoolWhatsApp() {
   window.open(waUrl, '_blank', 'noopener');
 }
 
-// ================= HOLIDAYS, CABINS, RMS & RULES =================
+// ================= HOLIDAYS, CABINS & RMS =================
 function renderHolidaysList() {
   const box = document.getElementById('holidays-list-container');
   if (!box) return;
@@ -1350,18 +1955,16 @@ function renderCabinsList() {
   const list = FACULTY_CABINS.filter((f) => !q || `${f.name} ${f.dept} ${f.cabin}`.toLowerCase().includes(q));
 
   box.innerHTML = list.map((f) => `
-    <div class="app-card p-3.5 space-y-1.5">
+    <div class="app-card-muted p-3 space-y-1">
       <div class="flex items-start justify-between gap-2">
         <div>
-          <h4 class="text-[13px] font-extrabold text-[var(--text-main)]">${esc(f.name)}</h4>
-          <p class="text-[11px] text-[var(--text-sub)]">${esc(f.dept)}</p>
+          <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(f.name)}</h4>
+          <p class="text-[10px] text-[var(--text-sub)]">${esc(f.dept)}</p>
         </div>
-        <a href="mailto:${esc(f.email)}" class="px-2.5 py-1 rounded-lg btn-neutral text-[11px] no-underline shrink-0">Email</a>
+        <a href="mailto:${esc(f.email)}" class="px-2 py-0.5 rounded bg-[var(--surface)] border border-[var(--border)] text-[10px] font-bold text-[var(--text-main)] no-underline shrink-0">Email</a>
       </div>
-      <div class="app-card-muted p-2.5 text-xs font-bold text-[var(--text-main)]">
-        <i class="fa-solid fa-location-dot text-[var(--accent)] mr-1.5"></i>${esc(f.cabin)}
-      </div>
-      <p class="text-[11px] text-[var(--text-sub)]"><i class="fa-regular fa-clock mr-1"></i>Visiting: ${esc(f.hours)}</p>
+      <p class="text-[11px] font-bold text-[var(--text-main)]"><i class="fa-solid fa-location-dot text-[var(--accent)] mr-1"></i>${esc(f.cabin)}</p>
+      <p class="text-[10px] text-[var(--text-sub)]">${esc(f.hours)}</p>
     </div>
   `).join('');
 }
@@ -1399,17 +2002,6 @@ function submitRmsTicket() {
   document.getElementById('rms-desc').value = '';
   renderRmsList();
   showToast('RMS Ticket Registered');
-}
-
-function renderRulesList() {
-  const box = document.getElementById('lpu-rules-list');
-  if (!box || typeof LPU_ENCYCLOPEDIA === 'undefined') return;
-  box.innerHTML = LPU_ENCYCLOPEDIA.transitAndRules.map((r) => `
-    <div class="app-card-muted p-3 space-y-0.5">
-      <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(r.title)}</h4>
-      <p class="text-[11px] text-[var(--text-sub)] leading-relaxed">${esc(r.detail)}</p>
-    </div>
-  `).join('');
 }
 
 // ================= PROFILE EDIT & GATE PASSES =================
@@ -1456,6 +2048,7 @@ function saveStudentProfile() {
   closeSheet('sheet-profile');
   renderProfileAndHome();
   renderMessQr();
+  renderMessPollUI();
   showToast('Student profile updated');
 }
 
@@ -1513,10 +2106,10 @@ function triggerAppInstall() {
 }
 
 function shareCampusGridApp() {
-  const shareUrl = 'https://iamaryaann.github.io/lpu-campusgrid/?v=5';
+  const shareUrl = 'https://iamaryaann.github.io/lpu-campusgrid/?v=6';
   const shareData = {
-    title: 'CampusGrid — LPU Verto Super-App',
-    text: 'Check out CampusGrid (LPU Attendance, Timetable, SGPA Calc, CA Tracker, Laundry, Mess Menu & Official LPU Map Links):',
+    title: 'CampusGrid v6.0 — LPU Verto Super-App',
+    text: 'Check out CampusGrid v6.0 (1-Click Section Timetable Sync, PYQ Bank, Verto OLX Bazaar, Lost & Found, Pocket Budget, SGPA & Live Mess Poll):',
     url: shareUrl
   };
   if (navigator.share) {
