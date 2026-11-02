@@ -1,5 +1,5 @@
-// CampusGrid PWA Service Worker v4 (Network-First + Offline Cache)
-const CACHE_NAME = 'campusgrid-cache-v4';
+// CampusGrid PWA Service Worker v5 (Network-First + Offline Cache)
+const CACHE_NAME = 'campusgrid-cache-v5';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',

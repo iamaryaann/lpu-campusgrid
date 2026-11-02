@@ -1,8 +1,8 @@
 {
-  "name": "CampusGrid — LPU Student App",
+  "name": "CampusGrid — LPU Verto Super-App",
   "short_name": "CampusGrid",
-  "description": "LPU Touch Student App: Attendance, Timetable, Live Mess Menu, Digital QR Pass & Official LPU Map Links",
-  "start_url": "./index.html?v=4",
+  "description": "LPU Student Super-App: Attendance, Timetable, SGPA Calc, CA Tracker, Laundry, Bill Split, Live Mess & Official LPU Map Links",
+  "start_url": "./index.html?v=5",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#f5f7fb",

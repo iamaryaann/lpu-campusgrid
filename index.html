@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>CampusGrid — LPU Touch Student App</title>
+  <title>CampusGrid — LPU Student Super-App</title>
 
   <!-- PWA Manifest & Mobile App Capabilities -->
   <link rel="manifest" href="manifest.json" />
@@ -17,7 +17,7 @@
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
 
-  <!-- Fonts & Icons (NO Leaflet / NO Embedded Map) -->
+  <!-- Fonts & Icons (Zero Embedded Map) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -255,8 +255,8 @@ html, body {
 
 .seg-btn {
   flex: 1;
-  padding: 8px 6px;
-  font-size: 12px;
+  padding: 8px 4px;
+  font-size: 11.5px;
   font-weight: 700;
   border-radius: 10px;
   color: var(--text-sub);
@@ -266,6 +266,8 @@ html, body {
   transition: all 0.18s ease;
   text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .seg-btn.active {
@@ -465,7 +467,7 @@ html, body {
             <span class="font-extrabold text-[16px] tracking-tight leading-none text-[var(--text-main)]">CampusGrid</span>
             <span id="top-sec-pill" class="px-1.5 py-0.5 rounded-md text-[10px] font-bold" style="background: var(--accent-soft); color: var(--accent-text);">K24AI</span>
           </div>
-          <p id="top-greeting" class="text-[11px] font-medium text-[var(--text-sub)] leading-tight mt-0.5">LPU Student Utility App</p>
+          <p id="top-greeting" class="text-[11px] font-medium text-[var(--text-sub)] leading-tight mt-0.5">LPU Verto Super-App</p>
         </div>
       </div>
 
@@ -480,7 +482,7 @@ html, body {
           <i class="fa-solid fa-qrcode text-sm"></i>
         </button>
 
-        <!-- Install PWA Button (Shown when installable or for guide) -->
+        <!-- Install PWA Button -->
         <button id="top-install-btn" onclick="triggerAppInstall()" class="px-2.5 h-9 rounded-xl flex items-center gap-1.5 btn-accent text-xs tap-scale">
           <i class="fa-solid fa-arrow-down text-[11px]"></i>
           <span>Get App</span>
@@ -492,7 +494,7 @@ html, body {
     <main class="app-content">
 
       <!-- ================================================== -->
-      <!-- SCREEN 1: HOME (LPU TOUCH DASHBOARD)               -->
+      <!-- SCREEN 1: HOME (LPU VERTO SUPER-DASHBOARD)         -->
       <!-- ================================================== -->
       <section id="screen-home" class="app-screen space-y-4">
 
@@ -504,9 +506,7 @@ html, body {
                 VS
               </div>
               <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                  <h1 id="home-name" class="font-extrabold text-[17px] text-white truncate">Verto Student</h1>
-                </div>
+                <h1 id="home-name" class="font-extrabold text-[17px] text-white truncate">Verto Student</h1>
                 <p class="text-xs text-white/75 font-medium truncate mt-0.5">
                   <span id="home-reg">12408912</span> • <span id="home-hostel">BH-4 (B-412)</span>
                 </p>
@@ -518,83 +518,115 @@ html, body {
             </button>
           </div>
 
-          <!-- 3 Crisp Stats Strip -->
-          <div class="grid grid-cols-3 gap-2 mt-4 pt-3.5 border-t border-white/15">
-            <div onclick="jumpTo('classes', 'attendance')" class="bg-white/10 rounded-xl p-2.5 cursor-pointer tap-scale">
-              <span class="block text-[10px] text-white/70 font-semibold">Attendance</span>
-              <div class="flex items-center gap-1.5 mt-0.5">
-                <span id="home-att-dot" class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                <span id="home-att-pct" class="text-[15px] font-extrabold text-white">84.5%</span>
+          <!-- 4 Crisp Stats Strip -->
+          <div class="grid grid-cols-4 gap-1.5 mt-4 pt-3.5 border-t border-white/15">
+            <div onclick="jumpTo('classes', 'attendance')" class="bg-white/10 rounded-xl p-2 cursor-pointer tap-scale">
+              <span class="block text-[10px] text-white/70 font-semibold">Attend.</span>
+              <div class="flex items-center gap-1 mt-0.5">
+                <span id="home-att-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span id="home-att-pct" class="text-[13px] font-extrabold text-white">84.5%</span>
               </div>
             </div>
-            <div onclick="jumpTo('classes', 'exams')" class="bg-white/10 rounded-xl p-2.5 cursor-pointer tap-scale">
+            <div onclick="jumpTo('classes', 'exams')" class="bg-white/10 rounded-xl p-2 cursor-pointer tap-scale">
               <span class="block text-[10px] text-white/70 font-semibold">CGPA</span>
-              <span id="home-cgpa" class="block text-[15px] font-extrabold text-white mt-0.5">8.74</span>
+              <span id="home-cgpa" class="block text-[13px] font-extrabold text-white mt-0.5">8.74</span>
             </div>
-            <div onclick="jumpTo('classes', 'timetable')" class="bg-white/10 rounded-xl p-2.5 cursor-pointer tap-scale">
+            <div onclick="jumpTo('classes', 'timetable')" class="bg-white/10 rounded-xl p-2 cursor-pointer tap-scale">
               <span class="block text-[10px] text-white/70 font-semibold">Today</span>
-              <span id="home-today-count" class="block text-[15px] font-extrabold text-white mt-0.5">5 Classes</span>
+              <span id="home-today-count" class="block text-[13px] font-extrabold text-white mt-0.5">4 Cls</span>
+            </div>
+            <div onclick="jumpTo('classes', 'tasks')" class="bg-white/10 rounded-xl p-2 cursor-pointer tap-scale">
+              <span class="block text-[10px] text-white/70 font-semibold">Due CAs</span>
+              <span id="home-ca-count" class="block text-[13px] font-extrabold text-amber-300 mt-0.5">3 Due</span>
             </div>
           </div>
         </div>
 
-        <!-- 8-Icon Native Quick Grid (LPU Touch Style) -->
+        <!-- 12-Icon Native Super-App Launcher (4x3 Clean Grid) -->
         <div class="app-card p-4">
           <div class="grid grid-cols-4 gap-y-4 gap-x-2 text-center">
             <button onclick="jumpTo('classes', 'attendance')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #ecfdf5; color: #059669;">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #ecfdf5; color: #059669;">
                 <i class="fa-solid fa-chart-pie"></i>
               </div>
               <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Attendance</span>
             </button>
 
             <button onclick="jumpTo('classes', 'timetable')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #eff6ff; color: #2563eb;">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #eff6ff; color: #2563eb;">
                 <i class="fa-solid fa-calendar-day"></i>
               </div>
               <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Timetable</span>
             </button>
 
+            <button onclick="jumpTo('classes', 'tasks')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #fef3c7; color: #d97706;">
+                <i class="fa-solid fa-list-check"></i>
+              </div>
+              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">CA &amp; Tasks</span>
+            </button>
+
+            <button onclick="jumpTo('classes', 'exams')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #f3e8ff; color: #7c3aed;">
+                <i class="fa-solid fa-calculator"></i>
+              </div>
+              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">SGPA Calc</span>
+            </button>
+
             <button onclick="jumpTo('mess', 'menu')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #fff7ed; color: #ea580c;">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #fff7ed; color: #ea580c;">
                 <i class="fa-solid fa-utensils"></i>
               </div>
               <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Mess Menu</span>
             </button>
 
             <button onclick="jumpTo('mess', 'qr')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #fef3c7; color: #d97706;">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #fef9c3; color: #ca8a04;">
                 <i class="fa-solid fa-qrcode"></i>
               </div>
               <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Meal QR</span>
             </button>
 
+            <button onclick="jumpTo('campus', 'hostel')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #e0f2fe; color: #0284c7;">
+                <i class="fa-solid fa-shirt"></i>
+              </div>
+              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Laundry</span>
+            </button>
+
+            <button onclick="jumpTo('campus', 'hostel'); setTimeout(()=>document.getElementById('khata-section')?.scrollIntoView({behavior:'smooth'}),80);" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #dcfce7; color: #16a34a;">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+              </div>
+              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Bill Split</span>
+            </button>
+
             <a href="https://www.google.com/maps/search/?api=1&query=Lovely+Professional+University+Phagwara+Punjab" target="_blank" rel="noopener" class="flex flex-col items-center gap-1.5 no-underline tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #eef2ff; color: #4f46e5;">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #eef2ff; color: #4f46e5;">
                 <i class="fa-solid fa-location-dot"></i>
               </div>
               <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">LPU Map ↗</span>
             </a>
 
-            <button onclick="switchScreen('profile'); setTimeout(()=>document.getElementById('gatepass-card').scrollIntoView({behavior:'smooth'}),80);" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #fdf2f8; color: #db2777;">
+            <button onclick="switchScreen('profile'); setTimeout(()=>document.getElementById('gatepass-card')?.scrollIntoView({behavior:'smooth'}),80);" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #fdf2f8; color: #db2777;">
                 <i class="fa-solid fa-ticket"></i>
               </div>
               <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Gate Pass</span>
             </button>
 
-            <button onclick="jumpTo('classes', 'exams')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #f3e8ff; color: #7c3aed;">
-                <i class="fa-solid fa-chair"></i>
+            <button onclick="jumpTo('campus', 'cabins')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #fae8ff; color: #9333ea;">
+                <i class="fa-solid fa-calendar-check"></i>
               </div>
-              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Exams</span>
+              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">Holidays</span>
             </button>
 
             <button onclick="jumpTo('campus', 'rms')" class="flex flex-col items-center gap-1.5 bg-transparent border-0 cursor-pointer tap-scale">
-              <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-base" style="background: #fee2e2; color: #dc2626;">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center text-[15px]" style="background: #fee2e2; color: #dc2626;">
                 <i class="fa-solid fa-screwdriver-wrench"></i>
               </div>
-              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">RMS / Help</span>
+              <span class="text-[11px] font-bold text-[var(--text-main)] leading-tight">RMS / SOS</span>
             </button>
           </div>
         </div>
@@ -607,12 +639,26 @@ html, body {
             </div>
             <div class="min-w-0">
               <h3 class="text-[13px] font-extrabold text-[var(--text-main)] leading-tight">Official LPU Campus Map</h3>
-              <p class="text-[11px] text-[var(--text-sub)] truncate mt-0.5">Direct Google Maps link &amp; Block finder</p>
+              <p class="text-[11px] text-[var(--text-sub)] truncate mt-0.5">Direct Google Maps link &amp; 38+ Blocks</p>
             </div>
           </div>
           <a href="https://www.google.com/maps/search/?api=1&query=Lovely+Professional+University+Phagwara+Punjab" target="_blank" rel="noopener" class="px-3 py-2 btn-accent text-xs no-underline shrink-0 tap-scale">
             Open Map <i class="fa-solid fa-arrow-up-right-from-square text-[10px] ml-1"></i>
           </a>
+        </div>
+
+        <!-- Pending CAs & Deadlines Quick Strip -->
+        <div class="app-card p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="text-[14px] font-extrabold text-[var(--text-main)]">Upcoming CAs &amp; Deadlines</h2>
+              <p class="text-[11px] text-[var(--text-sub)]">Tap checkbox to mark completed</p>
+            </div>
+            <button onclick="jumpTo('classes', 'tasks')" class="px-2.5 py-1 btn-soft text-[11px] tap-scale">
+              + Add CA
+            </button>
+          </div>
+          <div id="home-tasks-list" class="space-y-2"></div>
         </div>
 
         <!-- Today's Schedule Card -->
@@ -655,17 +701,18 @@ html, body {
       </section>
 
       <!-- ================================================== -->
-      <!-- SCREEN 2: CLASSES (ATTENDANCE • TIMETABLE • EXAMS) -->
+      <!-- SCREEN 2: CLASSES (ATT • TT • CA/FOCUS • SGPA)     -->
       <!-- ================================================== -->
       <section id="screen-classes" class="app-screen hidden space-y-4">
 
         <div class="segmented-bar">
-          <button id="seg-cls-attendance" onclick="switchSubTab('classes', 'attendance')" class="seg-btn active">Attendance</button>
+          <button id="seg-cls-attendance" onclick="switchSubTab('classes', 'attendance')" class="seg-btn active">Attend.</button>
           <button id="seg-cls-timetable" onclick="switchSubTab('classes', 'timetable')" class="seg-btn">Timetable</button>
-          <button id="seg-cls-exams" onclick="switchSubTab('classes', 'exams')" class="seg-btn">Exams &amp; Marks</button>
+          <button id="seg-cls-tasks" onclick="switchSubTab('classes', 'tasks')" class="seg-btn">CA &amp; Focus</button>
+          <button id="seg-cls-exams" onclick="switchSubTab('classes', 'exams')" class="seg-btn">SGPA &amp; Exam</button>
         </div>
 
-        <!-- Subview: Attendance -->
+        <!-- Subview 1: Attendance -->
         <div id="sub-cls-attendance" class="space-y-3.5">
           <div class="app-card p-4">
             <div class="flex items-center justify-between gap-3">
@@ -673,7 +720,7 @@ html, body {
                 <span class="text-[11px] font-bold uppercase tracking-wider text-[var(--text-sub)]">Aggregate Attendance</span>
                 <div class="flex items-baseline gap-2 mt-0.5">
                   <span id="att-big-pct" class="text-3xl font-extrabold text-[var(--text-main)]">84.5%</span>
-                  <span id="att-status-pill" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-600">Eligible (&ge;75%)</span>
+                  <span id="att-status-pill" class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-600">Safe (&ge;75%)</span>
                 </div>
                 <p id="att-bunk-advice" class="text-xs text-[var(--text-sub)] mt-1"></p>
               </div>
@@ -686,7 +733,7 @@ html, body {
           <div id="subjects-container" class="space-y-3"></div>
         </div>
 
-        <!-- Subview: Timetable -->
+        <!-- Subview 2: Timetable -->
         <div id="sub-cls-timetable" class="hidden space-y-3.5">
           <div class="flex items-center justify-between gap-2">
             <div id="tt-day-pills" class="pill-scroll flex-1"></div>
@@ -697,8 +744,126 @@ html, body {
           <div id="tt-list-container" class="space-y-2.5"></div>
         </div>
 
-        <!-- Subview: Exams & Marks Calculator -->
+        <!-- Subview 3: CA / Assignment Tracker & Exam Pomodoro Timer -->
+        <div id="sub-cls-tasks" class="hidden space-y-4">
+
+          <!-- CA & Assignment Deadlines Card -->
+          <div class="app-card p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">CA, Quiz &amp; Lab Deadlines</h3>
+                <p class="text-[11px] text-[var(--text-sub)]">Never miss a MyClass, OAS or CA submission</p>
+              </div>
+              <button onclick="openSheet('sheet-add-task')" class="px-2.5 py-1.5 btn-accent text-xs tap-scale">
+                <i class="fa-solid fa-plus mr-1"></i>Add CA
+              </button>
+            </div>
+            <div id="tasks-full-list" class="space-y-2"></div>
+          </div>
+
+          <!-- Pomodoro Exam Study Focus Timer -->
+          <div class="app-card p-4 text-center space-y-3">
+            <div class="flex items-center justify-between text-left">
+              <div>
+                <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Exam Focus Timer</h3>
+                <p class="text-[11px] text-[var(--text-sub)]">Distraction-free MTE / ETE revision sprints</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold" style="background: var(--accent-soft); color: var(--accent-text);">
+                <i class="fa-solid fa-fire mr-1"></i><span id="pomo-sessions-count">0</span> Done
+              </span>
+            </div>
+
+            <div class="flex justify-center gap-2">
+              <button onclick="setPomodoroMode(25)" id="pomo-m-25" class="filter-chip active">25m Focus</button>
+              <button onclick="setPomodoroMode(50)" id="pomo-m-50" class="filter-chip">50m Deep</button>
+              <button onclick="setPomodoroMode(5)" id="pomo-m-5" class="filter-chip">5m Break</button>
+            </div>
+
+            <div id="pomo-clock-display" class="text-4xl font-extrabold font-mono tracking-tight text-[var(--text-main)] py-2">
+              25:00
+            </div>
+
+            <div class="flex justify-center gap-2.5">
+              <button id="pomo-toggle-btn" onclick="togglePomodoro()" class="px-6 py-2.5 btn-accent text-xs tap-scale">
+                <i class="fa-solid fa-play mr-1.5"></i>Start Focus
+              </button>
+              <button onclick="resetPomodoro()" class="px-4 py-2.5 btn-neutral text-xs tap-scale">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick Study & Coding Resources Vault -->
+          <div class="app-card p-4 space-y-2.5">
+            <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Verto Study &amp; Free Perks Vault</h3>
+            <div class="space-y-2">
+              <a href="https://education.github.com/pack" target="_blank" rel="noopener" class="p-3 app-card-muted flex items-center justify-between no-underline tap-scale">
+                <div>
+                  <span class="text-xs font-extrabold text-[var(--text-main)] block">GitHub Student Developer Pack</span>
+                  <span class="text-[11px] text-[var(--text-sub)]">Free Copilot, Domains &amp; Cloud with @lpu.in email</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs text-[var(--accent)]"></i>
+              </a>
+              <a href="https://swayam.gov.in/" target="_blank" rel="noopener" class="p-3 app-card-muted flex items-center justify-between no-underline tap-scale">
+                <div>
+                  <span class="text-xs font-extrabold text-[var(--text-main)] block">SWAYAM / NPTEL MOOCs</span>
+                  <span class="text-[11px] text-[var(--text-sub)]">LPU Open Minor &amp; Credit Transfer Courses</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs text-[var(--accent)]"></i>
+              </a>
+              <a href="https://leetcode.com/problemset/" target="_blank" rel="noopener" class="p-3 app-card-muted flex items-center justify-between no-underline tap-scale">
+                <div>
+                  <span class="text-xs font-extrabold text-[var(--text-main)] block">PEP Placement DSA Practice</span>
+                  <span class="text-[11px] text-[var(--text-sub)]">Top Interview Problems for Block 32 Drives</span>
+                </div>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs text-[var(--accent)]"></i>
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Subview 4: Multi-Course SGPA/CGPA Calculator + Exam Seating + Marks Predictor -->
         <div id="sub-cls-exams" class="hidden space-y-4">
+
+          <!-- Multi-Subject Semester SGPA & Cumulative CGPA Calculator -->
+          <div class="app-card p-4 space-y-3.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Semester SGPA &amp; CGPA Calculator</h3>
+                <p class="text-[11px] text-[var(--text-sub)]">Official LPU 10-Point Credit Grading System</p>
+              </div>
+              <button onclick="addSgpaRow()" class="px-2.5 py-1.5 btn-soft text-xs tap-scale">
+                <i class="fa-solid fa-plus mr-1"></i>Course
+              </button>
+            </div>
+
+            <div id="sgpa-rows-container" class="space-y-2"></div>
+
+            <div class="grid grid-cols-2 gap-2 pt-1">
+              <div>
+                <label class="text-[10px] font-bold text-[var(--text-sub)] block mb-1">Past Credits Completed</label>
+                <input id="inp-past-credits" type="number" min="0" value="60" oninput="recalcSgpaCgpa()" class="app-input" />
+              </div>
+              <div>
+                <label class="text-[10px] font-bold text-[var(--text-sub)] block mb-1">Current CGPA (Before Sem)</label>
+                <input id="inp-past-cgpa" type="number" step="0.01" min="0" max="10" value="8.65" oninput="recalcSgpaCgpa()" class="app-input" />
+              </div>
+            </div>
+
+            <div class="app-card-muted p-3.5 grid grid-cols-2 gap-3 text-center">
+              <div>
+                <span class="text-[11px] font-bold text-[var(--text-sub)] block">Predicted Sem SGPA</span>
+                <span id="out-sem-sgpa" class="text-xl font-extrabold text-[var(--accent)]">8.85</span>
+              </div>
+              <div class="border-l border-[var(--border)]">
+                <span class="text-[11px] font-bold text-[var(--text-sub)] block">New Overall CGPA</span>
+                <span id="out-new-cgpa" class="text-xl font-extrabold text-[var(--text-main)]">8.70</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exam Seating Plan -->
           <div class="app-card p-4">
             <div class="flex items-center justify-between mb-3">
               <div>
@@ -712,11 +877,11 @@ html, body {
             <div id="exams-list-container" class="space-y-2.5"></div>
           </div>
 
-          <!-- Official LPU 5+25+20+50 Grade Predictor -->
+          <!-- Official LPU 5+25+20+50 Single Subject Grade Predictor -->
           <div class="app-card p-4 space-y-3.5">
             <div>
-              <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">LPU Marks &amp; Grade Predictor</h3>
-              <p class="text-[11px] text-[var(--text-sub)]">Official weightage: 5 (Att) + 25 (CA) + 20 (MTE) + 50 (ETE)</p>
+              <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Subject Marks &rarr; Grade Predictor</h3>
+              <p class="text-[11px] text-[var(--text-sub)]">Weightage: 5 (Att) + 25 (CA) + 20 (MTE) + 50 (ETE)</p>
             </div>
 
             <div class="space-y-3">
@@ -760,10 +925,11 @@ html, body {
               </div>
               <div class="text-right">
                 <span class="text-[11px] font-bold text-[var(--text-sub)] block">Expected Grade</span>
-                <span id="grade-letter-out" class="text-lg font-extrabold text-[var(--accent)]">A+ (9 GP)</span>
+                <span id="grade-letter-out" class="text-lg font-extrabold text-[var(--accent)]">A (8 GP)</span>
               </div>
             </div>
           </div>
+
         </div>
 
       </section>
@@ -825,7 +991,7 @@ html, body {
           <div class="app-card p-4 space-y-3">
             <div>
               <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Apply Mess Leave Rebate</h3>
-              <p class="text-[11px] text-[var(--text-sub)]">Minimum 3 consecutive home-leave days (&₹130/day credit)</p>
+              <p class="text-[11px] text-[var(--text-sub)]">Minimum 3 consecutive home-leave days (₹130/day credit)</p>
             </div>
             <div class="grid grid-cols-2 gap-2.5">
               <div>
@@ -852,21 +1018,20 @@ html, body {
       </section>
 
       <!-- ================================================== -->
-      <!-- SCREEN 4: CAMPUS (LPU MAP LINKS • BLOCKS • CABINS) -->
+      <!-- SCREEN 4: CAMPUS (MAP LINKS • HOSTEL • CABINS • SOS)-->
       <!-- ================================================== -->
       <section id="screen-campus" class="app-screen hidden space-y-4">
 
         <div class="segmented-bar">
           <button id="seg-cmp-blocks" onclick="switchSubTab('campus', 'blocks')" class="seg-btn active">Map &amp; Blocks</button>
-          <button id="seg-cmp-cabins" onclick="switchSubTab('campus', 'cabins')" class="seg-btn">Cabins</button>
+          <button id="seg-cmp-hostel" onclick="switchSubTab('campus', 'hostel')" class="seg-btn">Hostel Life</button>
+          <button id="seg-cmp-cabins" onclick="switchSubTab('campus', 'cabins')" class="seg-btn">Cabins/Dates</button>
           <button id="seg-cmp-rms" onclick="switchSubTab('campus', 'rms')" class="seg-btn">RMS &amp; SOS</button>
-          <button id="seg-cmp-portals" onclick="switchSubTab('campus', 'portals')" class="seg-btn">LPU Links</button>
         </div>
 
-        <!-- Subview: Official LPU Map Links & Searchable Blocks (ZERO EMBEDDED MAP) -->
+        <!-- Subview 1: Official LPU Map Links & Searchable Blocks (ZERO EMBEDDED MAP) -->
         <div id="sub-cmp-blocks" class="space-y-3.5">
 
-          <!-- Official LPU Map Direct Links Card -->
           <div class="app-card p-4 space-y-3">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background: var(--accent-soft); color: var(--accent);">
@@ -917,17 +1082,134 @@ html, body {
           <div id="campus-blocks-list" class="space-y-2.5"></div>
         </div>
 
-        <!-- Subview: Faculty Cabins -->
-        <div id="sub-cmp-cabins" class="hidden space-y-3">
-          <div class="relative">
-            <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[var(--text-faint)]"></i>
-            <input id="cabin-search-input" type="text" oninput="renderCabinsList()" placeholder="Search faculty name, CSE, MSB, DSW..." class="app-input" style="padding-left: 34px;" />
+        <!-- Subview 2: Hostel Life Toolkit (Uni-Laundry + Bill Splitter + Cab Pool) -->
+        <div id="sub-cmp-hostel" class="hidden space-y-4">
+
+          <!-- 1. Uni-Laundry Bag & Quota Tracker -->
+          <div class="app-card p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center bg-sky-500/15 text-sky-600">
+                  <i class="fa-solid fa-shirt text-sm"></i>
+                </div>
+                <div>
+                  <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Uni-Laundry Bag Tracker</h3>
+                  <p id="laundry-bag-sub" class="text-[11px] text-[var(--text-sub)]">Bag #BH4-2419 • Tue &amp; Fri Drop</p>
+                </div>
+              </div>
+              <button onclick="openSheet('sheet-laundry')" class="px-2.5 py-1 btn-neutral text-[11px] tap-scale">Edit Bag</button>
+            </div>
+
+            <div class="app-card-muted p-3 flex items-center justify-between">
+              <div>
+                <span class="text-[10px] font-bold uppercase text-[var(--text-sub)] block">Current Bag Status</span>
+                <span id="laundry-status-text" class="text-xs font-extrabold text-[var(--text-main)]">Ready in Room</span>
+              </div>
+              <div class="text-right">
+                <span class="text-[10px] font-bold uppercase text-[var(--text-sub)] block">Sem Quota Used</span>
+                <span id="laundry-quota-text" class="text-xs font-extrabold text-[var(--accent)]">11 / 35 Washes</span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <input id="inp-laundry-pcs" type="number" min="1" max="20" value="10" class="app-input" style="width: 95px;" title="Clothes count" />
+              <button id="btn-laundry-action" onclick="toggleLaundryDrop()" class="flex-1 py-2.5 btn-accent text-xs tap-scale">
+                Drop Laundry Bag (pcs)
+              </button>
+            </div>
           </div>
-          <div id="cabins-list-container" class="space-y-2.5"></div>
+
+          <!-- 2. Roommate Bill Splitter & Udhaar Khata -->
+          <div id="khata-section" class="app-card p-4 space-y-3">
+            <div>
+              <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Quick Bill Splitter &amp; Roommate Khata</h3>
+              <p class="text-[11px] text-[var(--text-sub)]">Split Night Canteen, UniMall, Pizza or Auto fares</p>
+            </div>
+
+            <!-- Instant Per-Head Calculator -->
+            <div class="app-card-muted p-3 space-y-2.5">
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <label class="text-[10px] font-bold text-[var(--text-sub)] block mb-1">Total Bill (₹)</label>
+                  <input id="inp-split-total" type="number" min="1" value="480" oninput="calcQuickSplit()" class="app-input" />
+                </div>
+                <div>
+                  <label class="text-[10px] font-bold text-[var(--text-sub)] block mb-1">Split Among</label>
+                  <input id="inp-split-heads" type="number" min="2" max="30" value="4" oninput="calcQuickSplit()" class="app-input" />
+                </div>
+              </div>
+              <div class="flex items-center justify-between pt-0.5">
+                <span class="text-xs font-bold text-[var(--text-sub)]">Each Pays: <strong id="out-split-each" class="text-sm text-[var(--text-main)]">₹120</strong></span>
+                <button onclick="copyUpiSplitMsg()" class="px-2.5 py-1.5 btn-soft text-[11px] tap-scale">
+                  <i class="fa-brands fa-whatsapp mr-1"></i>Copy Split Msg
+                </button>
+              </div>
+            </div>
+
+            <!-- Add Friend Udhaar Entry -->
+            <div class="flex gap-2">
+              <input id="inp-khata-name" type="text" placeholder="Friend Name" class="app-input" style="flex: 1.1;" />
+              <input id="inp-khata-amt" type="number" placeholder="₹ Amt" class="app-input" style="width: 82px;" />
+              <button onclick="addKhataItem()" class="px-3 btn-accent text-xs shrink-0 tap-scale">+ Log</button>
+            </div>
+
+            <div id="khata-list-box" class="space-y-2"></div>
+          </div>
+
+          <!-- 3. Station / Airport Cab-Pool WhatsApp Card -->
+          <div class="app-card p-4 space-y-3">
+            <div>
+              <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Station &amp; Airport Cab-Pool Post</h3>
+              <p class="text-[11px] text-[var(--text-sub)]">Create 1-tap cab share msg for hostel WhatsApp groups</p>
+            </div>
+            <select id="inp-cab-route" class="app-input">
+              <option value="LPU Gate 1 ➔ Jalandhar Cantt Station (JRC)">LPU Gate 1 ➔ Jalandhar Cantt Station (JRC)</option>
+              <option value="LPU Gate 1 ➔ Phagwara Jn Station (PGW)">LPU Gate 1 ➔ Phagwara Jn Station (PGW)</option>
+              <option value="LPU Gate 1 ➔ Amritsar Airport (ATQ)">LPU Gate 1 ➔ Amritsar Airport (ATQ)</option>
+              <option value="LPU Gate 1 ➔ Chandigarh Airport (IXC)">LPU Gate 1 ➔ Chandigarh Airport (IXC)</option>
+              <option value="Jalandhar Cantt (JRC) ➔ LPU Main Gate">Jalandhar Cantt (JRC) ➔ LPU Main Gate</option>
+            </select>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="inp-cab-when" type="text" placeholder="Date & Time (e.g. Fri 4 PM)" class="app-input" />
+              <input id="inp-cab-seats" type="text" placeholder="2 Seats Available" value="2 Seats Available" class="app-input" />
+            </div>
+            <button onclick="shareCabPoolWhatsApp()" class="w-full py-2.5 btn-accent text-xs tap-scale">
+              <i class="fa-brands fa-whatsapp mr-1.5 text-sm"></i>Share Cab-Pool on WhatsApp
+            </button>
+          </div>
+
         </div>
 
-        <!-- Subview: RMS Tickets & Emergency Helplines -->
+        <!-- Subview 3: Faculty Cabins & Official LPU Holiday Calendar -->
+        <div id="sub-cmp-cabins" class="hidden space-y-4">
+
+          <!-- LPU Academic & Holiday Calendar -->
+          <div class="app-card p-4 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <div>
+                <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">LPU Holidays &amp; Academic Dates</h3>
+                <p class="text-[11px] text-[var(--text-sub)]">Plan train tickets &amp; exam prep early</p>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background: var(--accent-soft); color: var(--accent-text);">2026–27</span>
+            </div>
+            <div id="holidays-list-container" class="space-y-2"></div>
+          </div>
+
+          <!-- Searchable Faculty Cabins -->
+          <div class="space-y-2.5">
+            <h3 class="text-[13px] font-extrabold text-[var(--text-main)] px-1">Faculty Cabins &amp; Helpdesks</h3>
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-xs text-[var(--text-faint)]"></i>
+              <input id="cabin-search-input" type="text" oninput="renderCabinsList()" placeholder="Search faculty name, CSE, MSB, DSW..." class="app-input" style="padding-left: 34px;" />
+            </div>
+            <div id="cabins-list-container" class="space-y-2.5"></div>
+          </div>
+
+        </div>
+
+        <!-- Subview 4: RMS Tickets, 24x7 SOS Helplines & Official LPU Portals -->
         <div id="sub-cmp-rms" class="hidden space-y-4">
+
           <!-- Emergency SOS Helplines -->
           <div class="app-card p-4 space-y-2.5">
             <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">LPU 24×7 Emergency Helplines</h3>
@@ -972,10 +1254,8 @@ html, body {
           </div>
 
           <div id="rms-tickets-list" class="space-y-2.5"></div>
-        </div>
 
-        <!-- Subview: Official LPU Portals & Quick Facts -->
-        <div id="sub-cmp-portals" class="hidden space-y-3.5">
+          <!-- Official LPU Portals -->
           <div class="app-card p-4 space-y-2.5">
             <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Official LPU Portals</h3>
             <div class="space-y-2">
@@ -1000,13 +1280,6 @@ html, body {
                 </div>
                 <i class="fa-solid fa-arrow-up-right-from-square text-xs text-[var(--accent)]"></i>
               </a>
-              <a href="https://www.lpu.in/" target="_blank" rel="noopener" class="p-3 app-card-muted flex items-center justify-between no-underline tap-scale">
-                <div>
-                  <span class="text-xs font-extrabold text-[var(--text-main)] block">LPU Official Website</span>
-                  <span class="text-[11px] text-[var(--text-sub)]">lpu.in • Admissions, Calendar &amp; Campus Info</span>
-                </div>
-                <i class="fa-solid fa-arrow-up-right-from-square text-xs text-[var(--accent)]"></i>
-              </a>
             </div>
           </div>
 
@@ -1014,6 +1287,7 @@ html, body {
             <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">Campus Rules &amp; Transit Guide</h3>
             <div id="lpu-rules-list" class="space-y-2"></div>
           </div>
+
         </div>
 
       </section>
@@ -1066,11 +1340,9 @@ html, body {
 
         <!-- Clean App Theme Switcher Card -->
         <div class="app-card p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">App Theme</h3>
-              <p class="text-[11px] text-[var(--text-sub)]">Choose your preferred clean interface look</p>
-            </div>
+          <div>
+            <h3 class="text-[14px] font-extrabold text-[var(--text-main)]">App Theme</h3>
+            <p class="text-[11px] text-[var(--text-sub)]">Choose your preferred clean interface look</p>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
@@ -1129,7 +1401,7 @@ html, body {
         </div>
 
         <p class="text-center text-[11px] text-[var(--text-faint)] pb-2">
-          CampusGrid v4.0 • Built by Aryan Khan (LPU)
+          CampusGrid v5.0 Super-App • Built by Aryan Khan (LPU)
         </p>
 
       </section>
@@ -1302,7 +1574,35 @@ html, body {
     </div>
   </div>
 
-  <!-- Sheet 4: Add Exam Seating -->
+  <!-- Sheet 4: Add CA / Assignment Deadline -->
+  <div id="sheet-add-task" class="sheet-backdrop hidden" onclick="backdropClose(event, 'sheet-add-task')">
+    <div class="sheet-panel space-y-3">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-[var(--text-main)]">Add CA / Assignment Deadline</h3>
+        <button onclick="closeSheet('sheet-add-task')" class="w-8 h-8 rounded-full btn-neutral text-xs">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <input id="inp-tk-code" type="text" placeholder="Course (e.g. CSE316)" class="app-input" />
+        <select id="inp-tk-type" class="app-input">
+          <option value="CA-1">CA-1</option>
+          <option value="CA-2">CA-2</option>
+          <option value="CA-3">CA-3</option>
+          <option value="MyClass Quiz">MyClass Quiz</option>
+          <option value="OAS Coding">OAS Coding</option>
+          <option value="Lab Practical">Lab Practical</option>
+        </select>
+      </div>
+      <input id="inp-tk-title" type="text" placeholder="Topic / Task (e.g. Process Scheduling Report)" class="app-input" />
+      <div>
+        <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Submission Due Date</label>
+        <input id="inp-tk-due" type="date" class="app-input" />
+      </div>
+      <button onclick="addNewTask()" class="w-full py-3 btn-accent text-sm tap-scale">Save Deadline</button>
+    </div>
+  </div>
+
+  <!-- Sheet 5: Add Exam Seating -->
   <div id="sheet-add-exam" class="sheet-backdrop hidden" onclick="backdropClose(event, 'sheet-add-exam')">
     <div class="sheet-panel space-y-3">
       <div class="sheet-handle"></div>
@@ -1332,7 +1632,39 @@ html, body {
     </div>
   </div>
 
-  <!-- Sheet 5: Apply Hostel Gate Pass -->
+  <!-- Sheet 6: Edit Uni-Laundry Bag Settings -->
+  <div id="sheet-laundry" class="sheet-backdrop hidden" onclick="backdropClose(event, 'sheet-laundry')">
+    <div class="sheet-panel space-y-3">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between">
+        <h3 class="text-base font-extrabold text-[var(--text-main)]">Uni-Laundry Bag Setup</h3>
+        <button onclick="closeSheet('sheet-laundry')" class="w-8 h-8 rounded-full btn-neutral text-xs">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Bag Number</label>
+          <input id="inp-lnd-bag" type="text" placeholder="BH4-2419" class="app-input" />
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Drop Days</label>
+          <input id="inp-lnd-days" type="text" placeholder="Tue & Fri" class="app-input" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div>
+          <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Washes Used</label>
+          <input id="inp-lnd-used" type="number" min="0" value="11" class="app-input" />
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Total Sem Washes</label>
+          <input id="inp-lnd-max" type="number" min="1" value="35" class="app-input" />
+        </div>
+      </div>
+      <button onclick="saveLaundryConfig()" class="w-full py-3 btn-accent text-sm tap-scale">Save Laundry Card</button>
+    </div>
+  </div>
+
+  <!-- Sheet 7: Apply Hostel Gate Pass -->
   <div id="sheet-gatepass" class="sheet-backdrop hidden" onclick="backdropClose(event, 'sheet-gatepass')">
     <div class="sheet-panel space-y-3">
       <div class="sheet-handle"></div>
@@ -1354,7 +1686,7 @@ html, body {
     </div>
   </div>
 
-  <!-- Sheet 6: Install App Instructions (Fallback for iOS / Mobile Browsers) -->
+  <!-- Sheet 8: Install App Instructions -->
   <div id="sheet-install" class="sheet-backdrop hidden" onclick="backdropClose(event, 'sheet-install')">
     <div class="sheet-panel space-y-3">
       <div class="sheet-handle"></div>
@@ -1377,7 +1709,7 @@ html, body {
   </div>
 
   <!-- Data & App Controller -->
-  <script src="data.js?v=4"></script>
-  <script src="app.js?v=4"></script>
+  <script src="data.js?v=5"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>
