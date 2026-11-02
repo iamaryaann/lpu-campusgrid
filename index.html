@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CampusGrid | LPU Campus Navigator & Live Mess Portal</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            lpu: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              300: '#fdba74',
+              400: '#fb923c',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c',
+              800: '#9a3412',
+              900: '#7c2d12',
+              brand: '#F37021', // Signature LPU Orange
+              navy: '#0f172a'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- PWA Meta & Manifest -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#070b12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CampusGrid">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-[#070b12] text-slate-100 font-['Plus_Jakarta_Sans',sans-serif] min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-40 bg-[#070b12]/90 backdrop-blur-xl border-b border-white/10 transition-all">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        
+        <!-- Brand Logo -->
+        <div class="flex items-center gap-3 cursor-pointer shrink-0" onclick="switchTab('map')">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-lpu-600 to-amber-500 flex items-center justify-center text-white shadow-md shadow-lpu-500/20">
+            <i class="fa-solid fa-layer-group text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-extrabold text-xl tracking-tight text-slate-900 dark:text-white">Campus<span class="text-lpu-500">Grid</span></span>
+              <span class="px-2 py-0.5 text-[10px] font-extrabold bg-lpu-100 text-lpu-800 dark:bg-lpu-950 dark:text-lpu-300 rounded-full border border-lpu-200 dark:border-lpu-800 uppercase tracking-wider">LPU Edition</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-medium hidden sm:block">Campus Navigation & Live Hostel Mess Grid</p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs Desktop -->
+        <nav class="hidden md:flex items-center space-x-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60">
+          <button id="nav-btn-map" onclick="switchTab('map')" class="nav-tab active flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg transition-all">
+            <i class="fa-solid fa-map-location-dot"></i>
+            <span>Campus Map</span>
+          </button>
+          <button id="nav-btn-mess" onclick="switchTab('mess')" class="nav-tab flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg transition-all">
+            <i class="fa-solid fa-utensils"></i>
+            <span>Mess Food</span>
+            <span id="live-meal-badge" class="px-1.5 py-0.2 text-[10px] uppercase font-bold tracking-wider bg-emerald-500 text-white rounded-md animate-pulse">Live</span>
+          </button>
+          <button id="nav-btn-community" onclick="switchTab('community')" class="nav-tab flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg transition-all">
+            <i class="fa-solid fa-comments"></i>
+            <span>Student Buzz</span>
+          </button>
+          <button id="nav-btn-eateries" onclick="switchTab('eateries')" class="nav-tab flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg transition-all">
+            <i class="fa-solid fa-burger"></i>
+            <span>UniMall & Cafes</span>
+          </button>
+          <button id="nav-btn-warden" onclick="switchTab('warden')" class="nav-tab hidden items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg text-rose-500 hover:text-rose-600 transition-all">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Warden Panel</span>
+          </button>
+          <button id="nav-btn-info" onclick="switchTab('info')" class="nav-tab flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg transition-all">
+            <i class="fa-solid fa-circle-info"></i>
+            <span>Helpline</span>
+          </button>
+          <button id="nav-btn-ppt" onclick="switchTab('ppt')" class="nav-tab flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-bold rounded-lg transition-all text-amber-400 bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 shadow-sm shadow-amber-500/10">
+            <i class="fa-solid fa-file-powerpoint text-amber-400"></i>
+            <span>Project PPT</span>
+          </button>
+        </nav>
+
+        <!-- Right Action Tools (Auth & Theme) -->
+        <div class="flex items-center gap-2 sm:gap-3">
+          
+          <!-- PWA Phone Install Button -->
+          <button id="pwa-install-btn" onclick="triggerPwaInstall()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 rounded-xl shadow-md transition transform active:scale-95" title="Install CampusGrid on Phone">
+            <i class="fa-solid fa-mobile-screen"></i>
+            <span class="hidden sm:inline">Install App</span>
+          </button>
+
+          <!-- Theme Toggle -->
+          <button id="theme-toggle" class="p-2.5 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all" title="Toggle Dark/Light Mode">
+            <i id="theme-icon" class="fa-solid fa-moon text-base"></i>
+          </button>
+
+          <!-- Clock -->
+          <div class="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300">
+            <i class="fa-regular fa-clock text-lpu-500"></i>
+            <span id="live-clock">--:--:--</span>
+          </div>
+
+          <!-- Logged Out State: Sign In Button -->
+          <div id="auth-logged-out" class="flex items-center gap-2">
+            <button onclick="openAuthModal('login')" class="flex items-center gap-2 px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-lpu-600 to-amber-600 hover:from-lpu-700 hover:to-amber-700 rounded-xl shadow-md shadow-lpu-500/20 transition transform active:scale-95">
+              <i class="fa-solid fa-right-to-bracket"></i>
+              <span>Verto Login</span>
+            </button>
+          </div>
+
+          <!-- Logged In State: User Pill & Profile Trigger -->
+          <div id="auth-logged-in" class="hidden relative">
+            <button onclick="openProfileModal()" class="flex items-center gap-2 p-1.5 pr-3 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition">
+              <img id="user-nav-avatar" src="" alt="Avatar" class="w-7 h-7 rounded-lg bg-orange-100">
+              <div class="text-left hidden sm:block">
+                <div class="text-xs font-bold text-slate-800 dark:text-white leading-none truncate max-w-[100px]" id="user-nav-name">Student</div>
+                <span class="text-[10px] font-semibold text-lpu-600 dark:text-lpu-400" id="user-nav-badge">BH-4</span>
+              </div>
+              <i class="fa-solid fa-chevron-down text-[10px] text-slate-400 ml-1"></i>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Bottom Tab Bar -->
+  <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070b12]/95 backdrop-blur-xl border-t border-white/10 py-2 px-2">
+    <div class="grid grid-cols-6 gap-1 text-center">
+      <button onclick="switchTab('map')" id="m-nav-map" class="m-nav-tab py-1 text-lpu-600 font-semibold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-map-location-dot text-base"></i>
+        <span class="text-[9px]">Map</span>
+      </button>
+      <button onclick="switchTab('mess')" id="m-nav-mess" class="m-nav-tab py-1 text-slate-500 dark:text-slate-400 font-semibold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-utensils text-base"></i>
+        <span class="text-[9px]">Mess</span>
+      </button>
+      <button onclick="switchTab('community')" id="m-nav-community" class="m-nav-tab py-1 text-slate-500 dark:text-slate-400 font-semibold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-comments text-base"></i>
+        <span class="text-[9px]">Buzz</span>
+      </button>
+      <button onclick="switchTab('eateries')" id="m-nav-eateries" class="m-nav-tab py-1 text-slate-500 dark:text-slate-400 font-semibold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-burger text-base"></i>
+        <span class="text-[9px]">Cafes</span>
+      </button>
+      <button onclick="switchTab('ppt')" id="m-nav-ppt" class="m-nav-tab py-1 text-amber-400 font-semibold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-file-powerpoint text-base"></i>
+        <span class="text-[9px]">PPT</span>
+      </button>
+      <button onclick="openProfileOrLoginMobile()" id="m-nav-user" class="m-nav-tab py-1 text-slate-500 dark:text-slate-400 font-semibold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-id-card text-base"></i>
+        <span class="text-[9px]">Profile</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Notice & Status Ribbon -->
+  <div id="status-ribbon" class="bg-gradient-to-r from-orange-600 via-amber-600 to-purple-700 text-white text-xs sm:text-sm py-2 px-4 shadow-sm border-b border-white/10">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2 truncate">
+        <span class="px-2 py-0.5 bg-black/25 rounded font-extrabold uppercase tracking-wider text-[10px]"><i class="fa-solid fa-bell mr-1"></i> Live Bulletin</span>
+        <span id="active-meal-announcement" class="font-medium truncate">Fetching mess meal status...</span>
+      </div>
+      <div class="hidden sm:flex items-center gap-3 shrink-0 text-xs font-semibold">
+        <span id="next-meal-countdown" class="bg-white/20 px-2.5 py-0.5 rounded-full"><i class="fa-solid fa-hourglass-half mr-1"></i> --</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 mb-16 md:mb-6">
+
+    <!-- ============================================== -->
+    <!-- SECTION 1: INTERACTIVE CAMPUS MAP & LOCATIONS -->
+    <!-- ============================================== -->
+    <section id="tab-map" class="tab-view block space-y-4">
+      
+      <!-- Search & Category Filter Toolbar -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <div class="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
+          
+          <!-- Search input with auto-suggest -->
+          <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </div>
+            <input 
+              type="text" 
+              id="map-search-input" 
+              placeholder="Search Block 32, UniMall, BH-4, Hospital, Library, Gate 1..."
+              class="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-lpu-500 dark:focus:ring-lpu-400"
+              autocomplete="off"
+            >
+            <button id="clear-search-btn" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 hidden">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+            <!-- Suggestions dropdown -->
+            <div id="search-suggestions" class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 z-30 max-h-60 overflow-y-auto hidden"></div>
+          </div>
+
+          <!-- Category filter buttons -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none" id="category-filter-bar">
+            <button onclick="filterMapCategory('all')" class="cat-pill active px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">
+              All Spots
+            </button>
+            <button onclick="filterMapCategory('academic')" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">
+              <i class="fa-solid fa-building-columns mr-1 text-blue-500"></i>Academic Blocks
+            </button>
+            <button onclick="filterMapCategory('hostel')" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">
+              <i class="fa-solid fa-bed mr-1 text-purple-500"></i>Hostels (BH & GH)
+            </button>
+            <button onclick="filterMapCategory('food')" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">
+              <i class="fa-solid fa-utensils mr-1 text-amber-500"></i>Messes & Food
+            </button>
+            <button onclick="filterMapCategory('amenities')" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">
+              <i class="fa-solid fa-cart-shopping mr-1 text-emerald-500"></i>UniMall & Medical
+            </button>
+            <button onclick="filterMapCategory('gates')" class="cat-pill px-3.5 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all">
+              <i class="fa-solid fa-torii-gate mr-1 text-rose-500"></i>Gates
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Map Display Container + Interactive Sidebar -->
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        
+        <!-- Interactive Leaflet Map -->
+        <div class="lg:col-span-3 bg-white dark:bg-slate-800 p-2 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 relative">
+          <div id="lpu-map" style="height: 540px; min-height: 540px; width: 100%; display: block;" class="w-full h-[540px] rounded-xl z-10"></div>
+          
+          <!-- Map Overlay Controls -->
+          <div class="absolute top-5 right-5 z-20 flex flex-col gap-2">
+            <button onclick="resetMapView()" class="bg-white/95 dark:bg-slate-800/95 hover:bg-white text-slate-800 dark:text-white p-2.5 rounded-xl shadow-md backdrop-blur border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="Center on LPU Main Campus">
+              <i class="fa-solid fa-crosshairs text-lpu-500"></i>
+              <span class="hidden sm:inline">Center Campus</span>
+            </button>
+            <button onclick="locateUserPosition()" class="bg-white/95 dark:bg-slate-800/95 hover:bg-white text-slate-800 dark:text-white p-2.5 rounded-xl shadow-md backdrop-blur border border-slate-200 dark:border-slate-700 text-xs font-semibold flex items-center gap-1.5 transition" title="My GPS Location">
+              <i class="fa-solid fa-location-arrow text-blue-500"></i>
+              <span class="hidden sm:inline">My Location</span>
+            </button>
+          </div>
+
+          <!-- Quick legend bottom bar -->
+          <div class="mt-2.5 px-3 py-2 bg-slate-50 dark:bg-slate-900/60 rounded-xl text-xs flex flex-wrap items-center justify-between gap-2 text-slate-600 dark:text-slate-400">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Academic</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-purple-500"></span> Hostels</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Food/Mess</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Facilities</span>
+            </div>
+            <span class="text-[11px] text-slate-400">Click any spot on map to view block details & directions</span>
+          </div>
+        </div>
+
+        <!-- Quick Landmark Directory Sidebar -->
+        <div class="lg:col-span-1 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col h-[580px]">
+          <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+            <h3 class="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-lpu-500"></i>
+              <span>Locations (<span id="location-count">0</span>)</span>
+            </h3>
+            <span class="text-xs text-slate-400" id="current-filter-label">All</span>
+          </div>
+
+          <!-- Scrollable Locations List -->
+          <div id="landmark-list" class="flex-1 overflow-y-auto p-2 space-y-2 divide-y divide-slate-100 dark:divide-slate-800"></div>
+        </div>
+
+      </div>
+
+    </section>
+
+    
+
+    <!-- ============================================== -->
+    <!-- SECTION 2: HOSTEL MESS FOOD SCHEDULE & MENU   -->
+    <!-- ============================================== -->
+    <section id="tab-mess" class="tab-view hidden space-y-6">
+      
+      <!-- Top Mess Controls: Hostel Picker & Day Selector -->
+      <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 space-y-4">
+        
+        <div class="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-bowl-food text-lpu-500"></i>
+                <span>Hostel Mess Daily Menu</span>
+              </h2>
+              <span id="my-mess-indicator" class="hidden px-2 py-0.5 rounded text-[10px] font-extrabold bg-lpu-100 dark:bg-lpu-950 text-lpu-700 dark:text-lpu-300">My Allotted Mess</span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Official standard cycle with live community ratings, calories & allergen tags.</p>
+          </div>
+
+          <!-- Hostel Selection Dropdown & Mess Type -->
+          <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+            <div class="relative flex-1 sm:w-56">
+              <select id="hostel-selector" onchange="onHostelOrDayChange()" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm font-semibold text-slate-800 dark:text-white focus:ring-2 focus:ring-lpu-500 focus:outline-none">
+                <optgroup label="Boys Hostels (BH)">
+                  <option value="BH-1">BH-1 Mess (North + Standard)</option>
+                  <option value="BH-2">BH-2 Mess</option>
+                  <option value="BH-3">BH-3 Mess</option>
+                  <option value="BH-4" selected>BH-4 Mess (Main Wing)</option>
+                  <option value="BH-5">BH-5 Mess</option>
+                  <option value="BH-6">BH-6 Mess</option>
+                  <option value="BH-7">BH-7 Mess</option>
+                  <option value="BH-8">BH-8 Mess (Tower Mess)</option>
+                </optgroup>
+                <optgroup label="Girls Hostels (GH)">
+                  <option value="GH-1">GH-1 Mess</option>
+                  <option value="GH-2">GH-2 Mess</option>
+                  <option value="GH-3">GH-3 Mess</option>
+                  <option value="GH-4">GH-4 Mess</option>
+                  <option value="GH-5">GH-5 Mess</option>
+                  <option value="GH-6">GH-6 Mess</option>
+                </optgroup>
+                <optgroup label="Special Messes">
+                  <option value="South-Special">Special South Indian Mess</option>
+                  <option value="Diet-Mess">Healthy / Gym Diet Mess</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- Diet Preference Toggle -->
+            <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-700 text-xs">
+              <button onclick="setDietFilter('all')" id="diet-btn-all" class="px-2.5 py-1 rounded-lg font-semibold bg-white dark:bg-slate-800 text-lpu-600 shadow-sm">All</button>
+              <button onclick="setDietFilter('pure-veg')" id="diet-btn-veg" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white">Veg Only</button>
+              <button onclick="setDietFilter('special')" id="diet-btn-special" class="px-2.5 py-1 rounded-lg font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white">Specials</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Days of Week Selector Bar -->
+        <div class="pt-2 border-t border-slate-100 dark:border-slate-700/60">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Day of Week</span>
+            <span id="current-day-label" class="text-xs font-semibold text-lpu-600 dark:text-lpu-400"></span>
+          </div>
+          <div class="grid grid-cols-7 gap-1 sm:gap-2" id="day-buttons-grid">
+            <button onclick="selectDay('monday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="monday">
+              <span class="block text-[10px] text-slate-400 uppercase">Mon</span>
+              <span>Mon</span>
+            </button>
+            <button onclick="selectDay('tuesday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="tuesday">
+              <span class="block text-[10px] text-slate-400 uppercase">Tue</span>
+              <span>Tue</span>
+            </button>
+            <button onclick="selectDay('wednesday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="wednesday">
+              <span class="block text-[10px] text-slate-400 uppercase">Wed</span>
+              <span>Wed</span>
+            </button>
+            <button onclick="selectDay('thursday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="thursday">
+              <span class="block text-[10px] text-slate-400 uppercase">Thu</span>
+              <span>Thu</span>
+            </button>
+            <button onclick="selectDay('friday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="friday">
+              <span class="block text-[10px] text-slate-400 uppercase">Fri</span>
+              <span>Fri</span>
+            </button>
+            <button onclick="selectDay('saturday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="saturday">
+              <span class="block text-[10px] text-slate-400 uppercase">Sat</span>
+              <span>Sat</span>
+            </button>
+            <button onclick="selectDay('sunday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="sunday">
+              <span class="block text-[10px] text-slate-400 uppercase">Sun</span>
+              <span>Sun</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Live Mess Food Rush & Rating Highlights -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Live Rush Indicator -->
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-500 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-users"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-semibold text-slate-400">Current Mess Crowd</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            </div>
+            <div class="text-base font-bold text-slate-900 dark:text-white" id="rush-status-text">Moderate Crowd (Normal Queue)</div>
+            <p class="text-[11px] text-slate-500">Wait time approx 4-7 minutes</p>
+          </div>
+        </div>
+
+        <!-- Student Satisfaction Today -->
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-star"></i>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-slate-400">Today's Food Score</div>
+            <div class="flex items-baseline gap-2">
+              <span class="text-xl font-extrabold text-slate-900 dark:text-white" id="average-score-text">4.4 / 5.0</span>
+              <span class="text-xs text-emerald-500 font-semibold"><i class="fa-solid fa-arrow-up"></i> 89% Positive</span>
+            </div>
+            <p class="text-[11px] text-slate-500">Based on 320+ student ratings today</p>
+          </div>
+        </div>
+
+        <!-- Mess Timings Quick Reference -->
+        <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 flex items-center gap-3.5">
+          <div class="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-500 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-regular fa-calendar-check"></i>
+          </div>
+          <div>
+            <div class="text-xs font-semibold text-slate-400">Official Mess Window</div>
+            <div class="text-sm font-bold text-slate-900 dark:text-white">B: 7:30-9:30 | L: 12:00-2:30</div>
+            <div class="text-[11px] text-slate-500 font-medium">S: 4:30-5:30 | D: 7:30-9:30 PM</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 4 Meal Cards Grid: Breakfast, Lunch, Evening Snacks, Dinner -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="meal-cards-container">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- Mess Leave Rebate & UMS Rules Banner -->
+      <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-lg border border-slate-700">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 bg-lpu-500/20 text-lpu-400 border border-lpu-500/40 rounded text-xs font-bold uppercase tracking-wider">UMS Mess Rebate</span>
+              <h4 class="text-lg font-bold">Leaving Campus? Apply For Mess Leave Rebate</h4>
+            </div>
+            <p class="text-sm text-slate-300">Minimum 3 days leave gets credited back to your hostel fee balance (₹130/day mess allowance refund).</p>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openRebateModal()" class="px-4 py-2.5 bg-lpu-500 hover:bg-lpu-600 rounded-xl text-xs font-bold text-white transition flex items-center gap-1.5 shadow-md">
+              <i class="fa-solid fa-file-invoice"></i>
+              <span>Apply Mess Rebate</span>
+            </button>
+            <button onclick="openFeedbackModal()" class="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-semibold text-white transition">
+              Rate Today's Dish
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    
+
+    <!-- ============================================== -->
+    <!-- SECTION 3: STUDENT BUZZ & COMMUNITY REVIEWS   -->
+    <!-- ============================================== -->
+    <section id="tab-community" class="tab-view hidden space-y-6">
+      
+      <!-- Community Hero -->
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 rounded text-xs font-bold uppercase tracking-wider">Live Student Voice</span>
+          <h2 class="text-2xl font-extrabold text-slate-900 dark:text-white mt-1">LPU Mess Community Buzz</h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">Real-time reviews and taste ratings shared by verified Vertos across all hostel messes.</p>
+        </div>
+        <button onclick="openFeedbackModal()" class="px-4 py-2 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl text-xs font-bold shadow transition flex items-center gap-2">
+          <i class="fa-solid fa-pen-to-square"></i>
+          <span>Write a Review</span>
+        </button>
+      </div>
+
+      <!-- Post a Quick Review Bar -->
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
+        <form onsubmit="handleQuickPostReview(event)" class="space-y-3">
+          <div class="flex gap-3 items-center">
+            <img id="quick-post-avatar" src="https://api.dicebear.com/7.x/bottts/svg?seed=Guest" alt="User" class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 shrink-0">
+            <input 
+              type="text" 
+              id="quick-review-input" 
+              placeholder="How was today's mess food in your hostel? (e.g. Samosa in BH-4 was fresh and crispy!)..." 
+              class="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-lpu-500"
+              required
+            >
+            <button type="submit" class="px-4 py-2.5 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl text-xs font-bold transition shrink-0">
+              Post Review
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Feed of Community Reviews -->
+      <div class="space-y-3" id="community-reviews-feed">
+        <!-- Loaded dynamically by app.js -->
+      </div>
+
+    </section>
+
+    
+
+    <!-- ============================================== -->
+    <!-- SECTION 4: UNIMALL, CAFES & CAMPUS FOOD JOINTS -->
+    <!-- ============================================== -->
+    <section id="tab-eateries" class="tab-view hidden space-y-6">
+      
+      <!-- Top Hero Header for Food Outlets -->
+      <div class="bg-gradient-to-r from-orange-500 to-amber-600 rounded-2xl p-6 text-white shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>
+          <span class="px-2 py-0.5 bg-black/20 text-white rounded text-xs font-bold uppercase tracking-wider">Beyond The Mess</span>
+          <h2 class="text-2xl font-black mt-1">Campus Cafes, UniMall & Food Courts</h2>
+          <p class="text-xs sm:text-sm text-orange-100 max-w-xl mt-1">Explore 50+ quick bites, brand outlets, late-night canteens and food stalls situated across LPU blocks.</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="filterEateries('all')" class="eatery-pill active px-3 py-1.5 bg-white text-orange-600 rounded-xl text-xs font-bold shadow transition">All Outlets</button>
+          <button onclick="filterEateries('unimall')" class="eatery-pill px-3 py-1.5 bg-black/20 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition">UniMall Food Court</button>
+          <button onclick="filterEateries('night')" class="eatery-pill px-3 py-1.5 bg-black/20 hover:bg-white/20 text-white rounded-xl text-xs font-semibold transition">Late Night (11 PM+)</button>
+        </div>
+      </div>
+
+      <!-- Food Joints Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" id="eateries-grid">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+
+    </section>
+
+    
+
+    <!-- ============================================== -->
+    <!-- SECTION 5: WARDEN / MESS ADMIN MANAGEMENT PANEL -->
+    <!-- ============================================== -->
+    <section id="tab-warden" class="tab-view hidden space-y-6">
+      
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-6 rounded-2xl shadow-sm border border-slate-700 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <span class="px-2.5 py-0.5 bg-rose-500/20 text-rose-300 border border-rose-500/40 rounded text-xs font-bold uppercase tracking-wider">Hostel Staff & Warden Console</span>
+          <h2 class="text-2xl font-black mt-1">Mess Operations & Leave Approval</h2>
+          <p class="text-xs text-slate-300">Authorized control room for live menu changes, emergency broadcasts and student mess rebates.</p>
+        </div>
+        <div class="px-3 py-1.5 bg-white/10 rounded-xl text-xs font-semibold">
+          Role: <span class="text-emerald-400 font-bold" id="warden-badge-status">Hostel Mess Warden</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Broadcast Notice Form -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+          <h3 class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-bullhorn text-lpu-500"></i>
+            <span>Broadcast Campus Announcement</span>
+          </h3>
+          <p class="text-xs text-slate-400">Post an instant alert on the top marquee of all student screens.</p>
+
+          <form onsubmit="handleWardenBroadcast(event)" class="space-y-3 text-xs">
+            <textarea id="broadcast-message-input" rows="3" placeholder="e.g. Special YouthVibe Gala Dinner tonight with Gulab Jamun & Ice Cream distribution at 8 PM!" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required></textarea>
+            <button type="submit" class="w-full py-2 bg-lpu-600 hover:bg-lpu-700 text-white font-bold rounded-xl shadow transition">
+              Publish Alert
+            </button>
+          </form>
+        </div>
+
+        <!-- Student Rebates Queue -->
+        <div class="lg:col-span-2 bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-file-signature text-emerald-500"></i>
+              <span>Student Mess Leave Rebates Queue</span>
+            </h3>
+            <span class="text-xs text-slate-400" id="pending-rebate-count">1 Request</span>
+          </div>
+
+          <div class="space-y-2 overflow-y-auto max-h-72" id="warden-rebates-list">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    
+
+    <!-- ============================================== -->
+    <!-- SECTION 6: HELP DIRECTORY & CAMPUS HELPLINES   -->
+    <!-- ============================================== -->
+    <section id="tab-info" class="tab-view hidden space-y-6">
+      
+      <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+        <h2 class="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+          <i class="fa-solid fa-headset text-lpu-500"></i>
+          <span>Campus Directory & Emergency Helpline</span>
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Official contact numbers for emergency assistance, hostel wardens, medical hospital and security.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          
+          <!-- Uni-Hospital -->
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+            <div class="flex items-center gap-2 text-rose-600 font-bold text-sm">
+              <i class="fa-solid fa-hospital"></i>
+              <span>Uni-Hospital (24x7 Emergency)</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Located behind Block 30. Doctors, ambulance, and pharmacy open 24/7.</p>
+            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <i class="fa-solid fa-phone mr-1 text-slate-400"></i> +91 1824 517100 / Ext: 7100
+            </div>
+          </div>
+
+          <!-- Campus Security -->
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+            <div class="flex items-center gap-2 text-blue-600 font-bold text-sm">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>LPU Chief Security Control</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Gate 1 Central Security Booth. For emergency escort or lost & found.</p>
+            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <i class="fa-solid fa-phone mr-1 text-slate-400"></i> +91 1824 517200 / 1800 102 4430
+            </div>
+          </div>
+
+          <!-- Hostel Chief Warden -->
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+            <div class="flex items-center gap-2 text-purple-600 font-bold text-sm">
+              <i class="fa-solid fa-user-tie"></i>
+              <span>Chief Warden Office (BH & GH)</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Hostel room allocation, discipline, curfew inquiries and mess oversight.</p>
+            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <i class="fa-solid fa-phone mr-1 text-slate-400"></i> +91 1824 517300
+            </div>
+          </div>
+
+          <!-- UMS Helpdesk -->
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+            <div class="flex items-center gap-2 text-emerald-600 font-bold text-sm">
+              <i class="fa-solid fa-laptop-code"></i>
+              <span>UMS / IT Services Support</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Wi-Fi registration, student portal login, attendance records and UMS tickets.</p>
+            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <i class="fa-solid fa-envelope mr-1 text-slate-400"></i> ums@lpu.co.in (Ext: 2200)
+            </div>
+          </div>
+
+          <!-- Central Library -->
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+            <div class="flex items-center gap-2 text-amber-600 font-bold text-sm">
+              <i class="fa-solid fa-book-open"></i>
+              <span>Central Library (Block 13 & 28)</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Open 8:00 AM – 11:00 PM on weekdays, extended hours during End-Term exams.</p>
+            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <i class="fa-solid fa-clock mr-1 text-slate-400"></i> Open till 2:00 AM during exams
+            </div>
+          </div>
+
+          <!-- Lost and Found -->
+          <div class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 space-y-2">
+            <div class="flex items-center gap-2 text-indigo-600 font-bold text-sm">
+              <i class="fa-solid fa-box-archive"></i>
+              <span>UniMall Lost & Found Booth</span>
+            </div>
+            <p class="text-xs text-slate-600 dark:text-slate-400">Ground Floor, UniMall Main Corridor (Opposite ATM kiosk).</p>
+            <div class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              <i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> UniMall Ground Floor
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </section>
+
+    
+
+  
+    <!-- ============================================== -->
+    <!-- SECTION 7: PROJECT PPT / PRESENTATION DECK     -->
+    <!-- ============================================== -->
+    <section id="tab-ppt" class="tab-view hidden space-y-6">
+      
+      <!-- Top Control Bar -->
+      <div class="bg-gradient-to-r from-slate-900 to-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <span class="px-2.5 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded text-[11px] font-extrabold uppercase tracking-wider">
+            <i class="fa-solid fa-graduation-cap mr-1"></i> Academic Project Defense
+          </span>
+          <h2 class="text-xl sm:text-2xl font-black text-white mt-1">CampusGrid Project Presentation</h2>
+          <p class="text-xs text-slate-300">Official 8-Slide Evaluation Deck for LPU Teachers & Review Panel.</p>
+        </div>
+
+        <!-- Slide Navigator Buttons & Auto Video Tour -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button onclick="startAutoVideoTour()" class="px-3.5 py-1.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold transition flex items-center gap-1.5 shadow-md shadow-orange-500/20" title="Play Automated Video Showcase">
+            <i class="fa-solid fa-circle-play text-white"></i> <span>Play Video Tour</span>
+          </button>
+          <button onclick="recordAndDownloadVideo()" class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md" title="Record and download .webm video">
+            <i class="fa-solid fa-video"></i> <span>Download Video</span>
+          </button>
+          <span class="text-xs font-mono font-bold text-amber-400 px-3 py-1.5 bg-black/40 rounded-xl border border-white/10" id="ppt-current-num">
+            Slide 1 / 8
+          </span>
+          <button onclick="prevPptSlide()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1">
+            <i class="fa-solid fa-chevron-left"></i> Prev
+          </button>
+          <button onclick="nextPptSlide()" class="px-3.5 py-1.5 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow">
+            Next <i class="fa-solid fa-chevron-right"></i>
+          </button>
+          <button onclick="window.print()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition" title="Print as PDF">
+            <i class="fa-solid fa-print"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Presentation Viewport (Slide Container) -->
+      <div class="bg-[#0b0f19] p-6 sm:p-10 rounded-3xl border border-white/10 shadow-2xl min-h-[460px] flex flex-col justify-between relative overflow-hidden" id="ppt-viewport">
+        
+        <!-- SLIDE 1: TITLE SLIDE -->
+        <div class="ppt-slide block space-y-4" id="ppt-slide-1">
+          <div class="border-l-4 border-lpu-500 pl-6 space-y-3">
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">LOVELY PROFESSIONAL UNIVERSITY • B.TECH CAPSTONE PROJECT</span>
+            <h1 class="text-4xl sm:text-5xl font-black text-white tracking-tight">Campus<span class="text-lpu-500">Grid</span></h1>
+            <p class="text-lg sm:text-xl text-cyan-400 font-semibold">Next-Gen LPU Campus Navigator & Live Hostel Mess Food System</p>
+            
+            <div class="pt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-slate-300">
+              <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+                <span class="text-slate-500 block uppercase text-[10px] font-bold">Presenter</span>
+                <span class="font-bold text-white text-sm">Student Developer Team</span>
+              </div>
+              <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+                <span class="text-slate-500 block uppercase text-[10px] font-bold">Department</span>
+                <span class="font-bold text-white text-sm">Computer Science & Engineering</span>
+              </div>
+              <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+                <span class="text-slate-500 block uppercase text-[10px] font-bold">Target Audience</span>
+                <span class="font-bold text-white text-sm">35,000+ LPU Vertos & Hostellers</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 2: PROBLEM STATEMENT -->
+        <div class="ppt-slide hidden space-y-4" id="ppt-slide-2">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">BACKGROUND & MOTIVATION</span>
+            <h3 class="text-2xl font-black text-white mt-1">The Problem: Friction in a 600+ Acre Campus</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-lpu-500 space-y-1">
+              <h4 class="font-bold text-sm text-white flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-lpu-500"></i> Massive Campus Scale</h4>
+              <p class="text-slate-400 leading-relaxed">With 600+ acres, freshers and visitors frequently get disoriented trying to find tech labs in Blocks 32 to 38, UniMall, or hospital facilities.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-cyan-500 space-y-1">
+              <h4 class="font-bold text-sm text-white flex items-center gap-2"><i class="fa-solid fa-utensils text-cyan-500"></i> Scattered Hostel Mess Menus</h4>
+              <p class="text-slate-400 leading-relaxed">Students across 14+ hostels have no real-time way to know the 4-meal rotation (Breakfast, Lunch, Snacks, Dinner) or nutritional content.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-emerald-500 space-y-1">
+              <h4 class="font-bold text-sm text-white flex items-center gap-2"><i class="fa-solid fa-users text-emerald-500"></i> Mess Queues & Timing Rush</h4>
+              <p class="text-slate-400 leading-relaxed">Students arrive blindly during peak hours, resulting in long waiting queues, hall congestion, and missed meal windows.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-purple-500 space-y-1">
+              <h4 class="font-bold text-sm text-white flex items-center gap-2"><i class="fa-solid fa-file-invoice text-purple-500"></i> Manual Mess Leave Rebates</h4>
+              <p class="text-slate-400 leading-relaxed">Students on leaves (>3 days) face complex manual paperwork to claim their legitimate ₹130/day mess fee refunds.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 3: PROPOSED SOLUTION -->
+        <div class="ppt-slide hidden space-y-4" id="ppt-slide-3">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">PROPOSED SOLUTION</span>
+            <h3 class="text-2xl font-black text-white mt-1">CampusGrid: An Integrated Campus Ecosystem</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-lpu-500/30 flex flex-col justify-between">
+              <div class="text-3xl font-black text-lpu-500 mb-2">01</div>
+              <h4 class="font-bold text-sm text-white mb-1">GIS Campus Map</h4>
+              <p class="text-slate-400">Leaflet engine with GPS pins for all academic blocks, hospitals, gates, and hostels with instant fly-to search.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-cyan-500/30 flex flex-col justify-between">
+              <div class="text-3xl font-black text-cyan-400 mb-2">02</div>
+              <h4 class="font-bold text-sm text-white mb-1">Live Mess Portal</h4>
+              <p class="text-slate-400">7-Day cyclical timetable with live countdown timer detecting current active meals and closing times.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-emerald-500/30 flex flex-col justify-between">
+              <div class="text-3xl font-black text-emerald-400 mb-2">03</div>
+              <h4 class="font-bold text-sm text-white mb-1">Digital Verto ID</h4>
+              <p class="text-slate-400">Student authentication with registration verification, hostel allocation, and digital campus card modal.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border border-purple-500/30 flex flex-col justify-between">
+              <div class="text-3xl font-black text-purple-400 mb-2">04</div>
+              <h4 class="font-bold text-sm text-white mb-1">Warden & Rebates</h4>
+              <p class="text-slate-400">Automated rebate refund calculator (₹130/day) with Warden review console and broadcast alert marquee.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 4: SYSTEM ARCHITECTURE & TECH STACK -->
+        <div class="ppt-slide hidden space-y-4" id="ppt-slide-4">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">TECHNICAL IMPLEMENTATION</span>
+            <h3 class="text-2xl font-black text-white mt-1">System Architecture & Tech Stack</h3>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="bg-slate-900/80 p-3.5 rounded-xl flex items-center justify-between border-l-4 border-lpu-500">
+              <div>
+                <h4 class="font-bold text-sm text-white">Presentation Layer (Frontend UI)</h4>
+                <p class="text-slate-400">Tailwind CSS (Aesthetic Cyber Dark Theme), Lucide Icons, Glassmorphism, and responsive mobile bottom-bar.</p>
+              </div>
+              <span class="text-xs font-mono text-orange-400 font-bold">HTML5 + Tailwind</span>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl flex items-center justify-between border-l-4 border-cyan-500">
+              <div>
+                <h4 class="font-bold text-sm text-white">Geospatial Mapping Engine</h4>
+                <p class="text-slate-400">Leaflet.js v1.9.4 with OpenStreetMap tiles, custom neon DivIcons, and camera fly-to animations.</p>
+              </div>
+              <span class="text-xs font-mono text-cyan-400 font-bold">Leaflet.js + OSM</span>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl flex items-center justify-between border-l-4 border-emerald-500">
+              <div>
+                <h4 class="font-bold text-sm text-white">State Management & Persistence</h4>
+                <p class="text-slate-400">Client-side auth session, persistent dish voting, community review feed, and rebate queue in LocalStorage.</p>
+              </div>
+              <span class="text-xs font-mono text-emerald-400 font-bold">LocalStorage API</span>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl flex items-center justify-between border-l-4 border-purple-500">
+              <div>
+                <h4 class="font-bold text-sm text-white">Mobile PWA Architecture</h4>
+                <p class="text-slate-400">Service Worker (sw.js) for asset caching and manifest.json for 1-click home screen install on Android & iOS.</p>
+              </div>
+              <span class="text-xs font-mono text-purple-400 font-bold">Progressive Web App</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 5: FUNCTIONAL MODULES -->
+        <div class="ppt-slide hidden space-y-4" id="ppt-slide-5">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">FUNCTIONAL MODULES</span>
+            <h3 class="text-2xl font-black text-white mt-1">Live Platform Capabilities</h3>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+              <h4 class="font-bold text-white text-xs mb-1 text-orange-400"><i class="fa-solid fa-map-pin mr-1"></i> Interactive Map</h4>
+              <p class="text-slate-400">Pins for Block 32 (CSE), 34, 36, 38, MSB, Library, UniMall, Hospital, BH-1..8, GH-1..6.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+              <h4 class="font-bold text-white text-xs mb-1 text-cyan-400"><i class="fa-solid fa-stopwatch mr-1"></i> Live Meal Clock</h4>
+              <p class="text-slate-400">Real-time status banner displaying current serving window and countdown to next meal.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+              <h4 class="font-bold text-white text-xs mb-1 text-emerald-400"><i class="fa-solid fa-id-card mr-1"></i> Digital Verto ID</h4>
+              <p class="text-slate-400">Visual student ID card with Reg number, hostel allotment, and instant 'My Mess' shortcut.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+              <h4 class="font-bold text-white text-xs mb-1 text-yellow-400"><i class="fa-solid fa-comments mr-1"></i> Student Buzz</h4>
+              <p class="text-slate-400">Community review feed with verified Verto badges, dish ratings, and upvotes.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+              <h4 class="font-bold text-white text-xs mb-1 text-purple-400"><i class="fa-solid fa-file-invoice mr-1"></i> UMS Rebate Engine</h4>
+              <p class="text-slate-400">Automated calculation of mess fee credits (₹130/day) for leaves over 3 days.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3.5 rounded-xl border border-white/5">
+              <h4 class="font-bold text-white text-xs mb-1 text-rose-400"><i class="fa-solid fa-user-shield mr-1"></i> Warden Console</h4>
+              <p class="text-slate-400">Staff portal to approve rebates and broadcast emergency meal announcements.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 6: INNOVATION & USPs -->
+        <div class="ppt-slide hidden space-y-4" id="ppt-slide-6">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">INNOVATION & DIFFERENTIATORS</span>
+            <h3 class="text-2xl font-black text-white mt-1">Why CampusGrid Stands Out</h3>
+          </div>
+
+          <div class="space-y-3 text-xs">
+            <div class="bg-slate-900/80 p-4 rounded-xl flex items-center gap-4 border border-lpu-500/20">
+              <div class="w-10 h-10 rounded-xl bg-orange-500/20 text-orange-400 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-bolt"></i></div>
+              <div>
+                <h4 class="font-bold text-sm text-white">Automated Real-Time Meal Awareness</h4>
+                <p class="text-slate-400 mt-0.5">Eliminates out-of-date PDF circulars. The system syncs with real time to highlight exactly what is being served now.</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/80 p-4 rounded-xl flex items-center gap-4 border border-cyan-500/20">
+              <div class="w-10 h-10 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-users"></i></div>
+              <div>
+                <h4 class="font-bold text-sm text-white">Mess Crowd Rush Indicator</h4>
+                <p class="text-slate-400 mt-0.5">Estimates dining queue density (Low, Moderate, Peak) so students avoid standing in long lines.</p>
+              </div>
+            </div>
+
+            <div class="bg-slate-900/80 p-4 rounded-xl flex items-center gap-4 border border-emerald-500/20">
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shrink-0"><i class="fa-solid fa-mobile-screen"></i></div>
+              <div>
+                <h4 class="font-bold text-sm text-white">Full-Screen Native Mobile PWA</h4>
+                <p class="text-slate-400 mt-0.5">Zero installation friction. Students can install it directly on their home screen without Play Store downloads.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 7: FUTURE SCOPE -->
+        <div class="ppt-slide hidden space-y-4" id="ppt-slide-7">
+          <div>
+            <span class="text-xs font-bold tracking-widest text-lpu-500 uppercase">ROADMAP</span>
+            <h3 class="text-2xl font-black text-white mt-1">Future Enhancements & Scalability</h3>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-lpu-500">
+              <h4 class="font-bold text-sm text-white mb-1">AI Food Wastage Predictor</h4>
+              <p class="text-slate-400 leading-relaxed">Machine learning models analyzing student dish ratings to forecast meal consumption and cut university mess waste by 20%.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-cyan-500">
+              <h4 class="font-bold text-sm text-white mb-1">Hostel Turnstile Biometric Sync</h4>
+              <p class="text-slate-400 leading-relaxed">Direct API sync with dining turnstiles to display live student headcounts in each mess hall in real time.</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-emerald-500">
+              <h4 class="font-bold text-sm text-white mb-1">AR Indoor Navigation</h4>
+              <p class="text-slate-400 leading-relaxed">Augmented Reality camera views to guide freshers inside multi-floor complexes (Block 32 CSE labs, Block 34 mechanical floors).</p>
+            </div>
+            <div class="bg-slate-900/80 p-4 rounded-2xl border-l-4 border-purple-500">
+              <h4 class="font-bold text-sm text-white mb-1">Automated UMS Gate Pass Rebate</h4>
+              <p class="text-slate-400 leading-relaxed">Approved leave gate passes on UMS automatically trigger mess rebate refunds without student manual entry.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- SLIDE 8: CONCLUSION -->
+        <div class="ppt-slide hidden text-center space-y-5 my-auto" id="ppt-slide-8">
+          <div class="space-y-2">
+            <h2 class="text-4xl sm:text-6xl font-black text-lpu-500">Campus<span class="text-white">Grid</span></h2>
+            <p class="text-base sm:text-xl text-slate-300 font-medium">Empowering 35,000+ Vertos with Smart Navigation & Intelligent Dining</p>
+          </div>
+          
+          <div class="pt-4">
+            <div class="inline-block px-8 py-3.5 bg-gradient-to-r from-orange-500 to-amber-600 rounded-2xl text-white font-extrabold text-lg sm:text-xl shadow-lg shadow-orange-500/20">
+              Thank You! Any Questions?
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Slide Quick-Jump Thumbnails -->
+      <div class="grid grid-cols-4 sm:grid-cols-8 gap-2 pt-2">
+        <button onclick="goToPptSlide(1)" class="ppt-thumb-btn active p-2 rounded-xl bg-slate-800 border border-amber-500 text-center text-[10px] font-bold text-white transition">Slide 1</button>
+        <button onclick="goToPptSlide(2)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 2</button>
+        <button onclick="goToPptSlide(3)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 3</button>
+        <button onclick="goToPptSlide(4)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 4</button>
+        <button onclick="goToPptSlide(5)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 5</button>
+        <button onclick="goToPptSlide(6)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 6</button>
+        <button onclick="goToPptSlide(7)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 7</button>
+        <button onclick="goToPptSlide(8)" class="ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition">Slide 8</button>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ============================================== -->
+  <!-- MODAL 1: AUTHENTICATION (LOGIN & REGISTRATION) -->
+  <!-- ============================================== -->
+  <div id="auth-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700">
+      
+      <!-- Modal Header -->
+      <div class="p-5 bg-gradient-to-r from-lpu-600 to-amber-600 text-white flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center font-black">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-base leading-tight">LPU Verto Access Portal</h3>
+            <p class="text-[11px] text-orange-100">Login with Registration Number or Email</p>
+          </div>
+        </div>
+        <button onclick="closeAuthModal()" class="w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Quick Demo Access 1-Click Buttons -->
+      <div class="p-4 bg-orange-50 dark:bg-slate-900/80 border-b border-slate-100 dark:border-slate-700/60">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[11px] font-bold uppercase tracking-wider text-lpu-700 dark:text-lpu-400">
+            <i class="fa-solid fa-bolt mr-1"></i> Quick 1-Click Demo Login:
+          </span>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="demoLogin('student1')" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-lpu-500 text-left transition shadow-sm">
+            <div class="text-[11px] font-bold truncate text-slate-800 dark:text-white">Rohan</div>
+            <div class="text-[9px] text-slate-400">BH-4 Verto</div>
+          </button>
+          <button onclick="demoLogin('student2')" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-lpu-500 text-left transition shadow-sm">
+            <div class="text-[11px] font-bold truncate text-slate-800 dark:text-white">Priya</div>
+            <div class="text-[9px] text-slate-400">GH-2 Verto</div>
+          </button>
+          <button onclick="demoLogin('warden')" class="p-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-500 text-left transition shadow-sm">
+            <div class="text-[11px] font-bold truncate text-rose-600 dark:text-rose-400">Dr. Sharma</div>
+            <div class="text-[9px] text-slate-400">Chief Warden</div>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tabs: Sign In / Sign Up -->
+      <div class="p-5 space-y-4">
+        
+        <div class="flex border-b border-slate-200 dark:border-slate-700">
+          <button onclick="switchAuthTab('signin')" id="auth-tab-signin" class="flex-1 pb-2.5 text-xs font-bold border-b-2 border-lpu-600 text-lpu-600">Sign In</button>
+          <button onclick="switchAuthTab('signup')" id="auth-tab-signup" class="flex-1 pb-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600">New Registration</button>
+        </div>
+
+        <!-- Sign In Form -->
+        <form id="signin-form" onsubmit="handleSignInSubmit(event)" class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Registration No / Email</label>
+            <input type="text" id="login-identifier" placeholder="e.g. 12204598 or rohan@lpu.in" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Password</label>
+            <input type="password" id="login-password" placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-lpu-600 hover:bg-lpu-700 text-white font-bold rounded-xl shadow-md transition">
+            Login to Dashboard
+          </button>
+        </form>
+
+        <!-- Sign Up Form (Initially Hidden) -->
+        <form id="signup-form" onsubmit="handleSignUpSubmit(event)" class="space-y-3 text-xs hidden">
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Full Name</label>
+            <input type="text" id="reg-name" placeholder="e.g. Aarav Patel" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Reg Number</label>
+              <input type="text" id="reg-no" placeholder="e.g. 12209931" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+            </div>
+            <div>
+              <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Hostel</label>
+              <select id="reg-hostel" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-2 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none">
+                <option value="BH-1">BH-1</option>
+                <option value="BH-2">BH-2</option>
+                <option value="BH-3">BH-3</option>
+                <option value="BH-4" selected>BH-4</option>
+                <option value="BH-5">BH-5</option>
+                <option value="BH-6">BH-6</option>
+                <option value="BH-7">BH-7</option>
+                <option value="BH-8">BH-8</option>
+                <option value="GH-1">GH-1</option>
+                <option value="GH-2">GH-2</option>
+                <option value="GH-3">GH-3</option>
+                <option value="GH-4">GH-4</option>
+                <option value="GH-5">GH-5</option>
+                <option value="GH-6">GH-6</option>
+                <option value="Day-Scholar">Day Scholar</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">LPU Email</label>
+            <input type="email" id="reg-email" placeholder="name.reg@lpu.in" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Create Password</label>
+            <input type="password" id="reg-password" placeholder="At least 6 characters" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+          <button type="submit" class="w-full py-2.5 bg-lpu-600 hover:bg-lpu-700 text-white font-bold rounded-xl shadow-md transition">
+            Register Account
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 2: USER PROFILE & DIGITAL VERTO ID CARD  -->
+  <!-- ============================================== -->
+  <div id="profile-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      
+      <!-- Digital ID Card Header -->
+      <div class="p-5 bg-gradient-to-br from-lpu-600 via-amber-600 to-orange-600 text-white relative">
+        <button onclick="closeProfileModal()" class="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+
+        <div class="flex items-center gap-2 mb-3">
+          <div class="w-7 h-7 rounded-lg bg-white/20 flex items-center justify-center text-xs font-black">
+            <i class="fa-solid fa-graduation-cap"></i>
+          </div>
+          <span class="text-xs font-extrabold uppercase tracking-widest text-orange-100">LOVELY PROFESSIONAL UNIVERSITY</span>
+        </div>
+
+        <div class="flex items-center gap-4">
+          <img id="card-avatar" src="" alt="Photo" class="w-16 h-16 rounded-2xl bg-white/30 border-2 border-white/50 p-1">
+          <div>
+            <h3 id="card-name" class="text-lg font-black leading-tight">Student Name</h3>
+            <p id="card-program" class="text-xs text-orange-100 font-medium mt-0.5">B.Tech CSE</p>
+            <div class="inline-block mt-1 px-2 py-0.5 bg-black/30 rounded-md text-[10px] font-mono tracking-wider">
+              REG: <span id="card-reg">12204598</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom barcode dummy -->
+        <div class="mt-4 pt-3 border-t border-white/20 flex items-center justify-between text-[11px]">
+          <div>
+            <span class="text-orange-200 block text-[9px] uppercase">Allotted Hostel</span>
+            <span id="card-hostel" class="font-bold">BH-4 (Room 412)</span>
+          </div>
+          <div>
+            <span class="text-orange-200 block text-[9px] uppercase">Mess Scheme</span>
+            <span id="card-mess" class="font-bold">Standard North</span>
+          </div>
+          <div class="text-right">
+            <span class="text-orange-200 block text-[9px] uppercase">Card Status</span>
+            <span class="font-bold text-emerald-300">Active • 2026</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action items -->
+      <div class="p-5 pt-0 space-y-3 text-xs">
+        <button onclick="jumpToMyMess()" class="w-full py-2.5 bg-lpu-50 dark:bg-slate-700/60 hover:bg-lpu-100 text-lpu-700 dark:text-lpu-300 rounded-xl font-bold flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-utensils"></i>
+          <span>Go to My Allotted Hostel Mess</span>
+        </button>
+
+        <button onclick="openRebateModal()" class="w-full py-2.5 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-800 dark:text-white rounded-xl font-semibold flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-calendar-days"></i>
+          <span>Apply / View Mess Leave Rebate</span>
+        </button>
+
+        <button onclick="handleLogout()" class="w-full py-2.5 bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 text-rose-600 dark:text-rose-400 rounded-xl font-bold flex items-center justify-center gap-2 transition">
+          <i class="fa-solid fa-right-from-bracket"></i>
+          <span>Log Out</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 3: MESS REBATE APPLICATION (UMS)         -->
+  <!-- ============================================== -->
+  <div id="rebate-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-file-invoice text-lpu-500"></i>
+            <span>UMS Mess Leave Rebate Application</span>
+          </h3>
+          <p class="text-xs text-slate-400">Leaves above 3 days qualify for ₹130/day mess fee credit.</p>
+        </div>
+        <button onclick="closeRebateModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleRebateSubmit(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Leaving From Date</label>
+            <input type="date" id="rebate-from" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+          <div>
+            <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Returning On Date</label>
+            <input type="date" id="rebate-to" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-lpu-500 focus:outline-none" required>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Reason for Leave</label>
+          <select id="rebate-reason" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-lpu-500 focus:outline-none">
+            <option>Visiting Home / Family Festival</option>
+            <option>Medical Leave / Hospitalization</option>
+            <option>Academic Hackathon / External Sports Event</option>
+            <option>Internship / Placement Drive</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Ticket / Travel Booking PNR (Optional)</label>
+          <input type="text" placeholder="e.g. IRCTC PNR: 2458910245" id="rebate-pnr" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 focus:ring-2 focus:ring-lpu-500 focus:outline-none">
+        </div>
+
+        <div class="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-800/40 text-emerald-800 dark:text-emerald-300 text-[11px]">
+          <i class="fa-solid fa-circle-info mr-1"></i> Refund credit will be reviewed by Chief Warden and directly deducted from next month's hostel mess dues.
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeRebateModal()" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl font-bold shadow transition">Submit to Warden</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 4: LOCATION DETAILS MODAL                -->
+  <!-- ============================================== -->
+  <div id="location-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-700 transform transition-all">
+      <div class="relative h-44 bg-gradient-to-r from-lpu-600 to-amber-600 flex items-end p-5 text-white">
+        <button onclick="closeLocationModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-black/30 hover:bg-black/50 flex items-center justify-center text-white transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div>
+          <span id="modal-category-badge" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase bg-white/20 text-white tracking-wider">Academic Block</span>
+          <h3 id="modal-title" class="text-xl font-black mt-1">Block 32 (Computer Science)</h3>
+        </div>
+      </div>
+      
+      <div class="p-6 space-y-4">
+        <p id="modal-description" class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          Detailed information about this block will appear here.
+        </p>
+
+        <div class="grid grid-cols-2 gap-3 pt-2 text-xs">
+          <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span class="text-slate-400 block text-[11px]">Primary Floors & Depts</span>
+            <span id="modal-dept" class="font-bold text-slate-800 dark:text-white mt-0.5 block">CSE, IT, AI & Data Science</span>
+          </div>
+          <div class="bg-slate-50 dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-700">
+            <span class="text-slate-400 block text-[11px]">Nearest Food Joint</span>
+            <span id="modal-nearest-food" class="font-bold text-slate-800 dark:text-white mt-0.5 block">Underpass Canteen (1 min walk)</span>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-2">
+          <button id="modal-navigate-btn" class="flex-1 py-2.5 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md transition">
+            <i class="fa-solid fa-location-arrow"></i>
+            <span>Center on Map</span>
+          </button>
+          <button onclick="closeLocationModal()" class="px-4 py-2.5 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-xl text-sm font-semibold transition">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================== -->
+  <!-- MODAL 5: MESS DISH REVIEW / RATING MODAL       -->
+  <!-- ============================================== -->
+  <div id="feedback-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid fa-utensils text-lpu-500"></i>
+            <span>Student Mess Feedback</span>
+          </h3>
+          <p class="text-xs text-slate-400">Share your rating for today's breakfast, lunch, or dinner.</p>
+        </div>
+        <button onclick="closeFeedbackModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form id="feedback-form" onsubmit="handleFeedbackSubmit(event)" class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Select Hostel Mess</label>
+          <select id="fb-hostel" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none">
+            <option>BH-1 Mess</option>
+            <option>BH-2 Mess</option>
+            <option>BH-3 Mess</option>
+            <option selected>BH-4 Mess</option>
+            <option>BH-5 Mess</option>
+            <option>BH-6 Mess</option>
+            <option>BH-7 Mess</option>
+            <option>BH-8 Mess</option>
+            <option>GH-1 to GH-6 Mess</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Meal Time</label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <label class="cursor-pointer text-center p-2 rounded-xl border border-slate-200 dark:border-slate-700 has-[:checked]:bg-lpu-500 has-[:checked]:text-white font-semibold">
+              <input type="radio" name="meal-time" value="Breakfast" class="hidden" checked> Breakfast
+            </label>
+            <label class="cursor-pointer text-center p-2 rounded-xl border border-slate-200 dark:border-slate-700 has-[:checked]:bg-lpu-500 has-[:checked]:text-white font-semibold">
+              <input type="radio" name="meal-time" value="Lunch" class="hidden"> Lunch
+            </label>
+            <label class="cursor-pointer text-center p-2 rounded-xl border border-slate-200 dark:border-slate-700 has-[:checked]:bg-lpu-500 has-[:checked]:text-white font-semibold">
+              <input type="radio" name="meal-time" value="Snacks" class="hidden"> Snacks
+            </label>
+            <label class="cursor-pointer text-center p-2 rounded-xl border border-slate-200 dark:border-slate-700 has-[:checked]:bg-lpu-500 has-[:checked]:text-white font-semibold">
+              <input type="radio" name="meal-time" value="Dinner" class="hidden"> Dinner
+            </label>
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Overall Taste & Hygiene Rating</label>
+          <div class="flex items-center justify-center gap-2 py-2 text-2xl text-amber-400" id="star-rating-container">
+            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition" onclick="setModalStarRating(1)"></i>
+            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition" onclick="setModalStarRating(2)"></i>
+            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition" onclick="setModalStarRating(3)"></i>
+            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition" onclick="setModalStarRating(4)"></i>
+            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition" onclick="setModalStarRating(5)"></i>
+          </div>
+          <input type="hidden" id="fb-rating" value="5">
+        </div>
+
+        <div>
+          <label class="block font-semibold mb-1 text-slate-700 dark:text-slate-300">Comments or Specific Dish Feedback</label>
+          <textarea id="fb-comments" rows="3" placeholder="e.g. Paneer was very fresh, dal tadka seasoning was spot on!" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-lpu-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2">
+          <button type="button" onclick="closeFeedbackModal()" class="px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl font-semibold hover:bg-slate-100 dark:hover:bg-slate-700">Cancel</button>
+          <button type="submit" class="px-4 py-2 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl font-bold shadow transition">Submit Feedback</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  
+  <!-- ============================================== -->
+  <!-- AUTOMATED VIDEO SHOWCASE OVERLAY SUBTITLE BAR  -->
+  <!-- ============================================== -->
+  <div id="video-tour-overlay" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4 hidden">
+    <div class="bg-slate-900/95 backdrop-blur-xl border-2 border-orange-500/60 p-4 rounded-2xl shadow-2xl space-y-2.5">
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping"></span>
+          <span class="font-extrabold uppercase tracking-wider text-orange-400" id="tour-chapter-badge">Part 1 of 11</span>
+          <span class="font-bold text-white" id="tour-title">Overview</span>
+        </div>
+        <button onclick="stopAutoVideoTour()" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-[10px] font-bold transition flex items-center gap-1">
+          <i class="fa-solid fa-xmark"></i> Stop Video
+        </button>
+      </div>
+
+      <div class="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+        <div id="tour-progress-bar" class="bg-gradient-to-r from-orange-500 to-amber-500 h-1.5 rounded-full transition-all duration-500" style="width: 10%;"></div>
+      </div>
+
+      <p id="tour-subtitle" class="text-xs sm:text-sm font-medium text-slate-200 leading-snug">
+        Welcome to CampusGrid...
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+
+  <footer class="mt-auto bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+        <span class="font-semibold text-slate-700 dark:text-slate-300">Lovely Professional University (LPU), Phagwara, Punjab 144411</span>
+      </div>
+      <div>
+        <span>Built for Vertos • Student Auth, Real Map Coordinates & Official Mess Cycles</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- Application Data & Logic -->
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+  <script src="video_tour.js"></script>
+</body>
+</html>
