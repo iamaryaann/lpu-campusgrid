@@ -1,11 +1,12 @@
 // CampusGrid PWA Service Worker v2 (Network-First with Offline Fallback)
-const CACHE_NAME = 'campusgrid-cache-v2';
+const CACHE_NAME = 'campusgrid-cache-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './styles.css',
   './data.js',
   './app.js',
+  './lpu_touch.js',
   './video_tour.js',
   './manifest.json',
   './icon.svg'
