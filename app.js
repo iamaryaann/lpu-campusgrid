@@ -52,7 +52,7 @@ const THEME_META_COLORS = {
 };
 
 const DEFAULT_PROFILE = {
-  name: 'Verto Student',
+  name: 'Aryan Khan',
   regNo: '12408912',
   section: 'K24AI',
   program: 'B.Tech CSE (AI & Data Science)',
@@ -227,10 +227,10 @@ const UMS_NOTICES = [
 ];
 
 const DEFAULT_RESUME = {
-  email: 'verto.student@lpu.in',
+  email: 'aryan.khan@lpu.in',
   phone: '+91 98765 43210',
-  github: 'github.com/verto-dev',
-  linkedin: 'linkedin.com/in/verto-lpu',
+  github: 'github.com/iamaryaann',
+  linkedin: 'linkedin.com/in/iamaryaann',
   skills: 'C++, Python, Java, JavaScript, React, Node.js, SQL, Data Structures & Algorithms, Machine Learning, Git',
   proj1: 'CampusGrid LPU Super-App | JavaScript, PWA, Tailwind — Built offline-first mobile super-app for attendance, timetable sync & campus utilities.',
   proj2: 'Smart Placement & Marks Predictor | Python, Scikit-Learn — Engineered ML academic performance & company-tier eligibility model.',
@@ -360,6 +360,10 @@ function loadState() {
   if (!THEME_ORDER.includes(appTheme)) appTheme = 'light';
 
   profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE) || 'null') || { ...DEFAULT_PROFILE };
+  if (profile.name === 'Verto Student') {
+    profile.name = 'Aryan Khan';
+    localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+  }
   subjects = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBJECTS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
   timetable = JSON.parse(localStorage.getItem(STORAGE_KEYS.TIMETABLE) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TIMETABLE));
   tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TASKS));
@@ -2680,7 +2684,7 @@ function confirmFullDeviceSyncImport() {
 }
 
 function shareAttendanceCardWhatsApp() {
-  const agg = getAggregateAttendance();
+  const agg = computeAggregateAttendance();
   const lines = subjects.map((s) => {
     const p = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
     return `${p >= 75 ? '🟢' : '🔴'} *${s.code}:* ${s.attended}/${s.total} (${p}%)`;
