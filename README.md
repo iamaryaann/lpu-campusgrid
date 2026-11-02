@@ -62,7 +62,7 @@ A sleek, cyberpunk dark-mode web application built for **Lovely Professional Uni
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/<your-username>/lpu-campusgrid.git
+   git clone https://github.com/iamaryaann/lpu-campusgrid.git
    cd lpu-campusgrid
    ```
 2. Start any static HTTP server (or open `index.html` directly in a browser):
