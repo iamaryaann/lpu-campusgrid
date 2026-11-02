@@ -74,6 +74,10 @@
 
         <!-- Navigation Tabs Desktop -->
         <nav class="hidden md:flex items-center space-x-1 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl border border-slate-200 dark:border-slate-700/60">
+          <button id="nav-btn-touch" onclick="switchTab('touch')" class="nav-tab flex items-center gap-1.5 px-3.5 py-2 text-xs lg:text-sm font-extrabold rounded-lg transition-all text-orange-400 bg-orange-500/10 border border-orange-500/30 hover:bg-orange-500/20">
+            <i class="fa-solid fa-mobile-screen-button text-orange-400"></i>
+            <span>LPU Touch</span>
+          </button>
           <button id="nav-btn-map" onclick="switchTab('map')" class="nav-tab active flex items-center gap-2 px-3.5 py-2 text-xs lg:text-sm font-semibold rounded-lg transition-all">
             <i class="fa-solid fa-map-location-dot"></i>
             <span>Campus Map</span>
@@ -157,7 +161,11 @@
 
   <!-- Mobile Bottom Tab Bar -->
   <div class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#070b12]/95 backdrop-blur-xl border-t border-white/10 py-2 px-2">
-    <div class="grid grid-cols-7 gap-0.5 text-center">
+    <div class="grid grid-cols-8 gap-0.5 text-center">
+      <button onclick="switchTab('touch')" id="m-nav-touch" class="m-nav-tab py-1 text-orange-400 font-extrabold flex flex-col items-center gap-1 text-xs">
+        <i class="fa-solid fa-mobile-screen-button text-base"></i>
+        <span class="text-[9px]">Touch</span>
+      </button>
       <button onclick="switchTab('map')" id="m-nav-map" class="m-nav-tab py-1 text-lpu-600 font-semibold flex flex-col items-center gap-1 text-xs">
         <i class="fa-solid fa-map-location-dot text-base"></i>
         <span class="text-[9px]">Map</span>
@@ -206,6 +214,306 @@
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 mb-16 md:mb-6">
 
     <!-- ============================================== -->
+    
+    <!-- ========================================================== -->
+    <!-- SECTION 0: LPU TOUCH STUDENT SUPER-PORTAL (FOR ALL VERTOS) -->
+    <!-- ========================================================== -->
+    <section id="tab-touch" class="tab-view hidden space-y-5">
+
+      <!-- Student Profile Strip (Customizable by ANY LPU Student) -->
+      <div class="bg-gradient-to-r from-[#111827] via-[#1e1b4b] to-[#2e1025] p-5 sm:p-6 rounded-3xl border border-orange-500/30 shadow-xl">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div class="flex items-start sm:items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-orange-500 to-amber-500 flex items-center justify-center text-white text-2xl font-black shadow-lg shrink-0">
+              <i class="fa-solid fa-user-graduate"></i>
+            </div>
+            <div class="space-y-1">
+              <div class="flex flex-wrap items-center gap-2">
+                <h2 id="tp-name" class="text-xl sm:text-2xl font-black text-white">Verto Student</h2>
+                <span id="tp-reg" class="px-2.5 py-0.5 rounded-lg bg-orange-500/20 border border-orange-500/40 text-orange-300 font-mono text-xs font-extrabold">Reg: 12408912</span>
+                <span id="tp-sec" class="px-2.5 py-0.5 rounded-lg bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 font-mono text-xs font-extrabold">Sec: K24AI</span>
+              </div>
+              <p id="tp-prog" class="text-xs sm:text-sm text-slate-300 font-medium">B.Tech CSE (AI &amp; Data Science) • Semester 4</p>
+              <div class="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+                <span><i class="fa-solid fa-bed text-purple-400 mr-1"></i><span id="tp-hostel">BH-4 (B-412)</span></span>
+                <span><i class="fa-solid fa-chalkboard-user text-emerald-400 mr-1"></i>Mentor: <span id="tp-mentor">Dr. Sandeep Kaur (Block 32)</span></span>
+                <span><i class="fa-solid fa-shield-check text-amber-400 mr-1"></i>Fee: <span id="tp-fee">Cleared</span></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="px-4 py-2.5 rounded-2xl bg-black/35 border border-white/10 text-center">
+              <span class="block text-[10px] uppercase font-bold text-slate-400">Aggregate Att.</span>
+              <span id="tp-agg-pct" class="text-xl sm:text-2xl font-black text-emerald-400">84.5%</span>
+              <span id="tp-agg-sub" class="block text-[10px] text-slate-400">Safe</span>
+            </div>
+            <div class="px-4 py-2.5 rounded-2xl bg-black/35 border border-white/10 text-center">
+              <span class="block text-[10px] uppercase font-bold text-slate-400">Current CGPA</span>
+              <span id="tp-cgpa" class="text-xl sm:text-2xl font-black text-amber-400">8.74</span>
+              <span class="block text-[10px] text-slate-400">UMS Verified</span>
+            </div>
+            <button onclick="openTouchProfileEditor()" class="px-4 py-3 rounded-2xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white text-xs font-extrabold shadow-lg transition flex items-center gap-2">
+              <i class="fa-solid fa-pen-to-square"></i>
+              <span>Set My Details</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LPU Touch Sub-Navigation Bar -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+        <button id="touch-pill-dashboard" onclick="switchTouchSubTab('dashboard')" class="touch-sub-pill px-3.5 py-2 rounded-xl text-xs font-extrabold bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-md transition whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-grip"></i> <span>Touch Home</span>
+        </button>
+        <button id="touch-pill-timetable" onclick="switchTouchSubTab('timetable')" class="touch-sub-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-regular fa-calendar-days text-cyan-400"></i> <span>My Timetable</span>
+        </button>
+        <button id="touch-pill-attendance" onclick="switchTouchSubTab('attendance')" class="touch-sub-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-chart-pie text-emerald-400"></i> <span>Subject Attendance</span>
+        </button>
+        <button id="touch-pill-passes" onclick="switchTouchSubTab('passes')" class="touch-sub-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-qrcode text-amber-400"></i> <span>Mess QR &amp; Gate Pass</span>
+        </button>
+        <button id="touch-pill-exams" onclick="switchTouchSubTab('exams')" class="touch-sub-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-file-pen text-purple-400"></i> <span>Exam Seating</span>
+        </button>
+        <button id="touch-pill-rms" onclick="switchTouchSubTab('rms')" class="touch-sub-pill px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition whitespace-nowrap flex items-center gap-1.5">
+          <i class="fa-solid fa-screwdriver-wrench text-rose-400"></i> <span>RMS &amp; Faculty Cabins</span>
+        </button>
+      </div>
+
+      <!-- SUB-PANEL 1: LPU TOUCH HOME DASHBOARD (8 ICON TILES + TODAY CLASSES + UMS MESSAGES) -->
+      <div id="touch-panel-dashboard" class="block space-y-6">
+        <!-- 8 Classic LPU Touch Tiles -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+          <button onclick="switchTouchSubTab('timetable')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-cyan-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-lg"><i class="fa-regular fa-calendar-days"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Timetable</span>
+          </button>
+          <button onclick="switchTouchSubTab('attendance')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-emerald-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center text-lg"><i class="fa-solid fa-user-check"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Attendance</span>
+          </button>
+          <button onclick="switchTouchSubTab('passes')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-amber-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center text-lg"><i class="fa-solid fa-qrcode"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Mess Scanner</span>
+          </button>
+          <button onclick="switchTouchSubTab('passes')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-orange-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-orange-500/15 text-orange-400 flex items-center justify-center text-lg"><i class="fa-solid fa-id-badge"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Gate Pass</span>
+          </button>
+          <button onclick="switchTouchSubTab('exams')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-purple-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-purple-500/15 text-purple-400 flex items-center justify-center text-lg"><i class="fa-solid fa-chair"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Exam Seating</span>
+          </button>
+          <button onclick="switchTab('lpu')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-pink-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-pink-500/15 text-pink-400 flex items-center justify-center text-lg"><i class="fa-solid fa-calculator"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Grade Calc</span>
+          </button>
+          <button onclick="switchTouchSubTab('rms')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-rose-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-rose-500/15 text-rose-400 flex items-center justify-center text-lg"><i class="fa-solid fa-headset"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">RMS Support</span>
+          </button>
+          <button onclick="switchTouchSubTab('rms')" class="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-blue-500 text-center space-y-2 transition hover-card">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center text-lg"><i class="fa-solid fa-door-closed"></i></div>
+            <span class="block text-xs font-bold text-slate-800 dark:text-white">Teacher Cabin</span>
+          </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Today's Lectures Card -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-bell text-orange-400"></i>
+                <span>Today's Lectures &amp; Room Numbers</span>
+              </h3>
+              <button onclick="switchTouchSubTab('timetable')" class="text-xs font-bold text-lpu-500 hover:underline">Full Timetable →</button>
+            </div>
+            <div id="tp-today-classes-preview" class="space-y-2.5"></div>
+          </div>
+
+          <!-- UMS Announcements & Messages -->
+          <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-2">
+                <i class="fa-solid fa-bullhorn text-cyan-400"></i>
+                <span>UMS Announcements &amp; Notices</span>
+              </h3>
+              <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-400">Live Feed</span>
+            </div>
+            <div id="tp-announcements-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 2: MY TIMETABLE (CUSTOMIZABLE PER STUDENT) -->
+      <div id="touch-panel-timetable" class="hidden space-y-5">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">My Weekly Class Timetable</h3>
+              <p class="text-xs text-slate-400">Add your own section's UMS lectures &amp; room numbers — saved automatically on your phone!</p>
+            </div>
+            <div id="touch-day-pills" class="flex flex-wrap gap-1.5"></div>
+          </div>
+
+          <div id="touch-timetable-list" class="space-y-2.5"></div>
+
+          <!-- Add Your Own Class Form -->
+          <form onsubmit="handleAddTouchClass(event)" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div class="text-xs font-extrabold text-orange-400 uppercase tracking-wider">+ Add Lecture to Selected Day</div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+              <input type="text" id="new-tt-code" placeholder="Code (e.g. INT108)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-semibold" required>
+              <input type="text" id="new-tt-title" placeholder="Subject Name" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-semibold" required>
+              <input type="text" id="new-tt-time" placeholder="09:00 AM - 10:00 AM" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+              <input type="text" id="new-tt-room" placeholder="Room (e.g. 32-405)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-semibold" required>
+              <select id="new-tt-type" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-semibold">
+                <option>Lecture</option>
+                <option>Lab</option>
+                <option>Tutorial</option>
+              </select>
+            </div>
+            <button type="submit" class="px-4 py-2 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl text-xs font-extrabold shadow transition">Save to My Timetable</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 3: SUBJECT-WISE ATTENDANCE MANAGER -->
+      <div id="touch-panel-attendance" class="hidden space-y-5">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Subject-Wise Attendance &amp; Daily Tracker</h3>
+            <p class="text-xs text-slate-400">Tap <strong>+ Present</strong> or <strong>+ Absent</strong> daily after class to track your real 75% eligibility &amp; LPU 5-Mark Attendance Bonus!</p>
+          </div>
+
+          <div id="touch-subjects-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+          <!-- Add Custom Subject -->
+          <form onsubmit="handleAddTouchSubject(event)" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div class="text-xs font-extrabold text-emerald-400 uppercase tracking-wider">+ Add Your Own Course</div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+              <input type="text" id="new-sub-code" placeholder="Code (e.g. CSE111)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="text" id="new-sub-name" placeholder="Course Title" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="number" id="new-sub-att" placeholder="Attended (e.g. 18)" min="0" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="number" id="new-sub-tot" placeholder="Total (e.g. 22)" min="1" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="text" id="new-sub-room" placeholder="Room (e.g. 34-201)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold shadow transition">Add Course</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 4: DIGITAL MESS MEAL QR TOKEN & HOSTEL GATE PASS -->
+      <div id="touch-panel-passes" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Digital Mess Meal Coupon Scanner -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 text-center space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-xs font-extrabold">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+            <span id="mess-pass-meal">LIVE MEAL COUPON</span>
+          </div>
+          <h3 id="mess-pass-hostel" class="text-lg font-black text-slate-900 dark:text-white">BH-4 Central Dining Hall</h3>
+          <p id="mess-qr-live-clock" class="font-mono text-xs font-bold text-amber-400">Verifying live clock...</p>
+
+          <div id="touch-mess-qr-svg" class="p-3 bg-white rounded-2xl w-48 mx-auto shadow-lg"></div>
+
+          <p id="mess-pass-student" class="text-xs font-bold text-slate-700 dark:text-slate-200"></p>
+          <p id="mess-pass-count" class="text-[11px] text-slate-400"></p>
+
+          <button onclick="refreshMessMealQr()" class="px-5 py-2.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-md transition">
+            <i class="fa-solid fa-rotate mr-1"></i> Generate Fresh Meal Token
+          </button>
+        </div>
+
+        <!-- Hostel Day / Night Leave Gate Pass -->
+        <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <i class="fa-solid fa-person-walking-arrow-right text-lpu-500"></i>
+              <span>Hostel Out-Pass &amp; Night Leave</span>
+            </h3>
+            <p class="text-xs text-slate-400">Generate Day Out-Pass (Law Gate / Phagwara) or Weekend Home Leave barcode.</p>
+          </div>
+
+          <form onsubmit="handleApplyGatePass(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <select id="gp-type" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 font-semibold">
+              <option>Day Out-Pass (Till 7:30 PM)</option>
+              <option>Night / Weekend Home Leave</option>
+              <option>Medical / City Visit Pass</option>
+            </select>
+            <input type="text" id="gp-dest" placeholder="Destination (e.g. Jalandhar / Law Gate)" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+            <input type="text" id="gp-out" placeholder="Out Time (e.g. Today 4:30 PM)" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+            <input type="text" id="gp-in" placeholder="In Time (e.g. Today 7:30 PM)" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+            <button type="submit" class="sm:col-span-2 py-2.5 bg-lpu-600 hover:bg-lpu-700 text-white rounded-xl font-extrabold shadow transition">Generate Hostel Gate Pass</button>
+          </form>
+
+          <div id="touch-gatepass-list" class="space-y-2.5 max-h-60 overflow-y-auto"></div>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 5: EXAM SEATING PLAN -->
+      <div id="touch-panel-exams" class="hidden space-y-5">
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Exam Seating Plan (CA / MTE / ETE)</h3>
+              <p class="text-xs text-slate-400">Save your upcoming exam rooms &amp; seat numbers and locate the exam block on GPS map in 1 tap.</p>
+            </div>
+            <button onclick="switchTab('lpu')" class="px-3.5 py-2 rounded-xl bg-amber-500/15 text-amber-400 text-xs font-extrabold">Open 5+25+20+50 Grade Predictor →</button>
+          </div>
+
+          <div id="touch-exams-list" class="space-y-2.5"></div>
+
+          <form onsubmit="handleAddTouchExam(event)" class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3">
+            <div class="text-xs font-extrabold text-purple-400 uppercase tracking-wider">+ Add My Exam Seating</div>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-xs">
+              <input type="text" id="ex-code" placeholder="Course (e.g. CSE316)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="text" id="ex-subject" placeholder="Subject Title" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="date" id="ex-date" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+              <input type="text" id="ex-room" placeholder="Room (e.g. 34-308)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+              <input type="text" id="ex-seat" placeholder="Seat (e.g. R3-C4)" class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+            </div>
+            <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-extrabold shadow transition">Save Exam Room</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- SUB-PANEL 6: RMS SUPPORT TICKETS & FACULTY CABIN FINDER -->
+      <div id="touch-panel-rms" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- RMS Ticket Logger -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">RMS Support &amp; Hostel Maintenance</h3>
+            <p class="text-xs text-slate-400">Log complaints for Hostel AC/Electrician, Sophos Wi-Fi, Carpenter, Attendance, or Mess.</p>
+          </div>
+          <form onsubmit="handleRaiseRmsTicket(event)" class="space-y-2.5 text-xs">
+            <select id="rms-cat" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 font-semibold">
+              <option>Hostel Maintenance (Electrician / AC / Fan)</option>
+              <option>Sophos Campus Wi-Fi / IT Support</option>
+              <option>Plumbing / Water Cooler / Washroom</option>
+              <option>Academic / Attendance Discrepancy</option>
+              <option>Hostel Mess Quality &amp; Hygiene</option>
+            </select>
+            <textarea id="rms-issue" rows="2" placeholder="Describe issue & room number..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-3" required></textarea>
+            <button type="submit" class="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-extrabold shadow transition">Submit RMS Ticket</button>
+          </form>
+          <div id="touch-rms-list" class="space-y-2.5"></div>
+        </div>
+
+        <!-- Faculty Cabin & HOD Directory -->
+        <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+          <div>
+            <h3 class="text-lg font-extrabold text-slate-900 dark:text-white">Faculty Cabin &amp; Helpdesk Finder</h3>
+            <p class="text-xs text-slate-400">Search teacher cabins, HOD offices, DSW Duty Leave desk, and Placement coordinators.</p>
+          </div>
+          <input type="text" oninput="renderTouchRmsAndFaculty(this.value)" placeholder="Search faculty name, CSE, MSB, DSW, Block 32..." class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3.5 py-2.5 text-xs">
+          <div id="touch-faculty-list" class="space-y-2.5 max-h-80 overflow-y-auto pr-1"></div>
+        </div>
+      </div>
+
+    </section>
+
     <!-- SECTION 1: INTERACTIVE CAMPUS MAP & LOCATIONS -->
     <!-- ============================================== -->
     <section id="tab-map" class="tab-view block space-y-4">
@@ -552,7 +860,7 @@
             <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Select Day of Week</span>
             <span id="current-day-label" class="text-xs font-semibold text-lpu-600 dark:text-lpu-400"></span>
           </div>
-          <div class="grid grid-cols-7 gap-1 sm:gap-2" id="day-buttons-grid">
+          <div class="grid grid-cols-8 gap-1 sm:gap-2" id="day-buttons-grid">
             <button onclick="selectDay('monday')" class="day-btn py-2 sm:py-2.5 px-1 rounded-xl text-center text-xs sm:text-sm font-semibold transition-all" data-day="monday">
               <span class="block text-[10px] text-slate-400 uppercase">Mon</span>
               <span>Mon</span>
@@ -1612,6 +1920,73 @@
     </div>
   </div>
 
+
+  <!-- ============================================== -->
+  <!-- MODAL 6: PERSONALIZE MY LPU TOUCH DETAILS      -->
+  <!-- ============================================== -->
+  <div id="touch-profile-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3">
+        <div>
+          <h3 class="text-base font-extrabold text-slate-900 dark:text-white">Personalize My LPU Touch</h3>
+          <p class="text-xs text-slate-400">Saved privately on your own phone/browser for daily use!</p>
+        </div>
+        <button onclick="closeTouchProfileEditor()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form onsubmit="saveTouchProfileEditor(event)" class="space-y-3 text-xs">
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold mb-1">Your Full Name</label>
+            <input type="text" id="edit-tp-name" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Registration No.</label>
+            <input type="text" id="edit-tp-reg" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Section (e.g. K24AI)</label>
+            <input type="text" id="edit-tp-sec" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2" required>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Current CGPA</label>
+            <input type="text" id="edit-tp-cgpa" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+          </div>
+        </div>
+        <div>
+          <label class="block font-bold mb-1">Program / Branch</label>
+          <input type="text" id="edit-tp-prog" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-bold mb-1">Hostel / Day Scholar</label>
+            <select id="edit-tp-hostel" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+              <option>BH-1</option><option>BH-2</option><option>BH-3</option><option>BH-4</option>
+              <option>BH-5</option><option>BH-6</option><option>BH-7</option><option>BH-8</option>
+              <option>GH-1</option><option>GH-2</option><option>GH-3</option><option>GH-4</option>
+              <option>GH-5</option><option>GH-6</option><option>Apartments</option><option>Day-Scholar</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Room No. / City</label>
+            <input type="text" id="edit-tp-room" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Mentor Name</label>
+            <input type="text" id="edit-tp-mentor" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+          </div>
+          <div>
+            <label class="block font-bold mb-1">Mentor Cabin</label>
+            <input type="text" id="edit-tp-cabin" class="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2">
+          </div>
+        </div>
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeTouchProfileEditor()" class="px-4 py-2 rounded-xl border border-slate-700">Cancel</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-lpu-600 hover:bg-lpu-700 text-white font-extrabold shadow">Save My Profile</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Footer -->
 
   <footer class="mt-auto bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
@@ -1631,6 +2006,7 @@
   <!-- Application Data & Logic -->
   <script src="data.js"></script>
   <script src="app.js"></script>
+  <script src="lpu_touch.js"></script>
   <script src="video_tour.js"></script>
 </body>
 </html>
