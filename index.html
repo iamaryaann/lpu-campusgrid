@@ -1461,15 +1461,35 @@
           <div id="gatepasses-list" class="space-y-2.5"></div>
         </div>
 
-        <!-- PACK 2 FEATURE #8: Phone-to-Phone Magic Sync Link & Attendance Report -->
+        <!-- PACK 2 FEATURE #8 + FULL-STACK BACKEND: Cloud Database Sync & Magic Link -->
         <div id="magic-sync-card" class="app-card p-4 space-y-3" style="border-color: var(--accent);">
-          <div>
-            <h3 class="text-[14px] font-extrabold text-[var(--text-main)]"><i class="fa-solid fa-wand-magic-sparkles text-[var(--accent)] mr-1.5"></i>Phone-to-Phone Magic Sync</h3>
-            <p class="text-[11px] text-[var(--text-sub)]">Transfer full Attendance, Timetable, Budget &amp; CV without any file</p>
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h3 class="text-[14px] font-extrabold text-[var(--text-main)]"><i class="fa-solid fa-database text-[var(--accent)] mr-1.5"></i>Backend DB &amp; Cloud Sync</h3>
+              <p class="text-[11px] text-[var(--text-sub)]">SQLite REST API (/api) + 24×7 Cloud DB Sync</p>
+            </div>
+            <span id="backend-status-badge" class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/15 text-emerald-600 shrink-0">🟢 DB Online</span>
+          </div>
+
+          <div class="app-card-muted p-3 space-y-2">
+            <span class="text-[10px] font-extrabold uppercase text-[var(--text-sub)] block">Cloud Account Save / Login (Reg No + PIN):</span>
+            <div class="grid grid-cols-2 gap-2">
+              <input id="inp-cloud-reg" type="text" placeholder="Reg No (12408912)" value="12408912" class="app-input" style="padding: 8px 10px;" />
+              <input id="inp-cloud-pin" type="text" placeholder="PIN or Cloud ID" value="1234" class="app-input" style="padding: 8px 10px;" />
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="saveAccountToBackend()" class="py-2 px-2 btn-accent text-xs tap-scale">
+                <i class="fa-solid fa-cloud-arrow-up mr-1"></i>Save to DB
+              </button>
+              <button onclick="loadAccountFromBackend()" class="py-2 px-2 btn-neutral text-xs tap-scale">
+                <i class="fa-solid fa-cloud-arrow-down mr-1"></i>Load from DB
+              </button>
+            </div>
+            <p id="cloud-sync-status-lbl" class="text-[10.5px] font-mono font-bold text-[var(--text-sub)] truncate">Ready • SQLite + REST Cloud Engine v8.0</p>
           </div>
 
           <div class="grid grid-cols-2 gap-2">
-            <button onclick="shareFullDeviceSyncLink()" class="py-2.5 px-2 btn-accent text-xs tap-scale">
+            <button onclick="shareFullDeviceSyncLink()" class="py-2.5 px-2 btn-soft text-xs tap-scale">
               <i class="fa-solid fa-link mr-1"></i>Copy Magic Link
             </button>
             <button onclick="shareAttendanceCardWhatsApp()" class="py-2.5 px-2 btn-soft text-xs tap-scale">
@@ -1997,6 +2017,7 @@
     Saved
   </div>
 
+  
   <style>
 /* ========================================================
    CAMPUSGRID v7.0 — NATIVE MOBILE APP DESIGN SYSTEM

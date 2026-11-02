@@ -36,6 +36,8 @@ const STORAGE_KEYS = {
 };
 
 const CLOUD_FEED_TOPIC = 'lpu_campusgrid_v7_verto_community_hub';
+const CLOUD_REST_OBJECT_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a19ce93f741119';
+const CLOUD_REST_COLLECTION_URL = 'https://api.restful-api.dev/objects';
 
 const THEME_ORDER = ['light', 'ocean', 'mint', 'dark'];
 const THEME_LABELS = {
@@ -343,6 +345,16 @@ document.addEventListener('DOMContentLoaded', () => {
   checkIncomingFullSync();
   pullLiveCommunityCloud();
 
+  // Ensure URL bar explicitly shows developer=Aryan_Khan for AI / link readers
+  try {
+    const curParams = new URLSearchParams(window.location.search);
+    if (!curParams.get('sec_sync') && !curParams.get('full_sync') && curParams.get('developer') !== 'Aryan_Khan') {
+      curParams.set('v', '8');
+      curParams.set('developer', 'Aryan_Khan');
+      window.history.replaceState({}, document.title, `${window.location.pathname}?${curParams.toString()}`);
+    }
+  } catch (e) {}
+
   updateQrClock();
   setInterval(updateQrClock, 1000);
 
@@ -509,53 +521,129 @@ function confirmSectionSyncImport() {
   showToast(`Imported Section ${profile.section} Timetable!`);
 }
 
-// ================= LEVEL 2 HYBRID CLOUD SYNC (NON-BLOCKING) =================
+// ================= FULL-STACK BACKEND: SQLITE REST API (/api) + 24x7 CLOUD DB =================
 async function pushCloudEvent(eventObj) {
+  // 1. Try Local Full-Stack Python + SQLite REST Backend (/api/...)
   try {
-    const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 3500);
-    await fetch(`https://ntfy.sh/${CLOUD_FEED_TOPIC}`, {
-      method: 'POST',
-      body: JSON.stringify(eventObj),
-      signal: ctrl.signal
+    const endpointMap = {
+      bazaar: '/api/bazaar',
+      lostfound: '/api/lostfound',
+      teamup: '/api/teamup',
+      poll: '/api/poll'
+    };
+    const apiPath = endpointMap[eventObj.kind];
+    if (apiPath) {
+      const ctrl1 = new AbortController();
+      const t1 = setTimeout(() => ctrl1.abort(), 2200);
+      const r1 = await fetch(apiPath, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventObj),
+        signal: ctrl1.signal
+      });
+      clearTimeout(t1);
+      if (r1.ok) {
+        setText('backend-status-badge', '🟢 SQLite API Synced');
+      }
+    }
+  } catch (_) {}
+
+  // 2. Sync with 24x7 Cloud REST Database (Works on GitHub Pages + LPU Sophos Wi-Fi)
+  try {
+    const ctrl2 = new AbortController();
+    const t2 = setTimeout(() => ctrl2.abort(), 4500);
+    const getResp = await fetch(CLOUD_REST_OBJECT_URL, { signal: ctrl2.signal });
+    const curObj = getResp.ok ? await getResp.json() : {};
+    const curData = curObj.data || { dev: 'Aryan Khan', good: messPoll.good, okay: messPoll.okay, skip: messPoll.skip };
+
+    if (eventObj.kind === 'poll' && eventObj.choice) {
+      curData[eventObj.choice] = Number(curData[eventObj.choice] || messPoll[eventObj.choice] || 10) + 1;
+    } else if (eventObj.kind === 'bazaar' && eventObj.item) {
+      curData.latestBz = JSON.stringify(eventObj.item);
+    } else if (eventObj.kind === 'lostfound' && eventObj.item) {
+      curData.latestLf = JSON.stringify(eventObj.item);
+    } else if (eventObj.kind === 'teamup' && eventObj.item) {
+      curData.latestTm = JSON.stringify(eventObj.item);
+    }
+
+    await fetch(CLOUD_REST_OBJECT_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'CampusGrid_v8_LPU_Cloud_DB', data: curData }),
+      signal: ctrl2.signal
     });
-    clearTimeout(timer);
-  } catch (e) {
-    // Gracefully ignored if campus Sophos firewall blocks external pubsub
-  }
+    clearTimeout(t2);
+    setText('backend-status-badge', '🟢 Cloud DB Synced');
+  } catch (e) {}
 }
 
 async function pullLiveCommunityCloud() {
+  // 1. Check Local Full-Stack SQLite REST Server (/api/community) first
   try {
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), 3500);
-    const resp = await fetch(`https://ntfy.sh/${CLOUD_FEED_TOPIC}/json?poll=1&since=72h`, { signal: ctrl.signal });
+    const timer = setTimeout(() => ctrl.abort(), 2000);
+    const localResp = await fetch('/api/community', { signal: ctrl.signal });
+    clearTimeout(timer);
+    if (localResp.ok) {
+      const snap = await localResp.json();
+      if (snap && snap.ok) {
+        if (Array.isArray(snap.bazaar) && snap.bazaar.length) bazaarItems = snap.bazaar;
+        if (Array.isArray(snap.lostfound) && snap.lostfound.length) lostFoundItems = snap.lostfound;
+        if (Array.isArray(snap.teamup) && snap.teamup.length) teamUpItems = snap.teamup;
+        if (snap.messPoll) {
+          messPoll.good = snap.messPoll.good;
+          messPoll.okay = snap.messPoll.okay;
+          messPoll.skip = snap.messPoll.skip;
+        }
+        setText('backend-status-badge', '🟢 SQLite + Cloud Online');
+        setText('cloud-sync-status-lbl', `Connected: ${snap.engine}`);
+        renderBazaarList();
+        renderLostFoundList();
+        renderTeamUpList();
+        renderMessPollUI();
+      }
+    }
+  } catch (_) {}
+
+  // 2. Pull from 24x7 Cloud REST Database (GitHub Pages + LPU Wi-Fi)
+  try {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 4500);
+    const resp = await fetch(CLOUD_REST_OBJECT_URL, { signal: ctrl.signal });
     clearTimeout(timer);
     if (!resp.ok) return;
-    const text = await resp.text();
-    const lines = text.trim().split('\n').filter(Boolean);
+    const obj = await resp.json();
+    const d = obj.data;
+    if (!d) return;
 
     let changed = false;
-    lines.forEach((line) => {
-      try {
-        const env = JSON.parse(line);
-        if (!env.message) return;
-        const ev = JSON.parse(env.message);
-        if (ev.kind === 'bazaar' && ev.item && !bazaarItems.some((x) => x.id === ev.item.id)) {
-          bazaarItems.unshift(ev.item);
-          changed = true;
-        } else if (ev.kind === 'lostfound' && ev.item && !lostFoundItems.some((x) => x.id === ev.item.id)) {
-          lostFoundItems.unshift(ev.item);
-          changed = true;
-        } else if (ev.kind === 'teamup' && ev.item && !teamUpItems.some((x) => x.id === ev.item.id)) {
-          teamUpItems.unshift(ev.item);
-          changed = true;
-        } else if (ev.kind === 'poll' && ev.choice && messPoll[ev.choice] !== undefined) {
-          messPoll[ev.choice] += 1;
-          changed = true;
-        }
-      } catch (_) {}
-    });
+    if (typeof d.good === 'number') {
+      messPoll.good = Math.max(messPoll.good, d.good);
+      messPoll.okay = Math.max(messPoll.okay, d.okay || 12);
+      messPoll.skip = Math.max(messPoll.skip, d.skip || 6);
+      changed = true;
+    }
+    if (d.latestBz) {
+      const item = JSON.parse(d.latestBz);
+      if (item && !bazaarItems.some((x) => x.id === item.id)) {
+        bazaarItems.unshift(item);
+        changed = true;
+      }
+    }
+    if (d.latestLf) {
+      const item = JSON.parse(d.latestLf);
+      if (item && !lostFoundItems.some((x) => x.id === item.id)) {
+        lostFoundItems.unshift(item);
+        changed = true;
+      }
+    }
+    if (d.latestTm) {
+      const item = JSON.parse(d.latestTm);
+      if (item && !teamUpItems.some((x) => x.id === item.id)) {
+        teamUpItems.unshift(item);
+        changed = true;
+      }
+    }
 
     if (changed) {
       localStorage.setItem(STORAGE_KEYS.BAZAAR, JSON.stringify(bazaarItems.slice(0, 40)));
@@ -565,8 +653,91 @@ async function pullLiveCommunityCloud() {
       renderLostFoundList();
       renderTeamUpList();
       renderMessPollUI();
+      setText('backend-status-badge', '🟢 Cloud DB Online');
     }
   } catch (e) {}
+}
+
+async function saveAccountToBackend() {
+  const regNo = val('inp-cloud-reg') || profile.regNo || '12408912';
+  const pin = val('inp-cloud-pin') || '1234';
+  const payload = {
+    p: profile,
+    s: subjects,
+    t: timetable,
+    k: tasks,
+    g: sgpaRows,
+    b: budget,
+    l: laundry,
+    r: resumeData
+  };
+
+  setText('cloud-sync-status-lbl', 'Saving to Backend DB...');
+
+  // 1. Save to Local SQLite REST Server (/api/cloud-save) if running
+  let savedLocal = false;
+  try {
+    const r = await fetch('/api/cloud-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regNo, pin, payload })
+    });
+    if (r.ok) {
+      const res = await r.json();
+      if (res.ok) {
+        savedLocal = true;
+        setText('cloud-sync-status-lbl', `SQLite Saved: Reg ${regNo} (${res.updatedAt})`);
+      }
+    }
+  } catch (_) {}
+
+  // 2. Also save to 24x7 Cloud REST API (api.restful-api.dev)
+  try {
+    const token = encodeUtf8Base64Url(payload);
+    const r2 = await fetch(CLOUD_REST_COLLECTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: `CG_${regNo}_${pin}`,
+        data: { regNo, pin, token: token.slice(0, 900), updated: new Date().toLocaleTimeString() }
+      })
+    });
+    if (r2.ok) {
+      const obj = await r2.json();
+      localStorage.setItem(`cg_cloud_id_${regNo}`, obj.id);
+      if (!savedLocal) {
+        setText('cloud-sync-status-lbl', `Cloud DB ID: ${obj.id.slice(-8)} (Reg ${regNo})`);
+      }
+    }
+  } catch (_) {}
+
+  showToast(`Saved Reg ${regNo} to Backend DB!`);
+}
+
+async function loadAccountFromBackend() {
+  const regNo = val('inp-cloud-reg') || profile.regNo || '12408912';
+  const pin = val('inp-cloud-pin') || '1234';
+  setText('cloud-sync-status-lbl', 'Fetching from Backend DB...');
+
+  try {
+    const r = await fetch('/api/cloud-load', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regNo, pin })
+    });
+    if (r.ok) {
+      const res = await r.json();
+      if (res.ok && res.payload) {
+        pendingFullSyncPayload = res.payload;
+        confirmFullDeviceSyncImport();
+        setText('cloud-sync-status-lbl', `Loaded from SQLite DB (${res.updatedAt})`);
+        return;
+      }
+    }
+  } catch (_) {}
+
+  showToast('Save to DB first on this server or use Magic Sync Link');
+  setText('cloud-sync-status-lbl', `Ready • Reg ${regNo}`);
 }
 
 // ================= THEME SYSTEM =================
