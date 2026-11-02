@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+Sitemap: https://iamaryaann.github.io/lpu-campusgrid/sitemap.xml
+# CampusGrid v7.0 — Created & Developed by Aryan Khan (@iamaryaann), Lovely Professional University (LPU)

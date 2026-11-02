@@ -9,7 +9,7 @@
 
 const STORAGE_KEYS = {
   THEME: 'cg_app_theme_v4',
-  PROFILE: 'cg_touch_profile_v3',
+  PROFILE: 'cg_profile_aryankhan_v8',
   SUBJECTS: 'cg_touch_subjects_v3',
   TIMETABLE: 'cg_touch_timetable_v3',
   TASKS: 'cg_verto_tasks_v5',
@@ -698,7 +698,7 @@ function renderProfileAndHome() {
   const left = Math.max(0, Number(budget.monthlyLimit || 6000) - spent);
 
   setText('top-sec-pill', profile.section || 'LPU');
-  setText('top-greeting', `Hi, ${String(profile.name || 'Verto').split(' ')[0]} • Reg ${profile.regNo}`);
+  setText('top-greeting', `Built by Aryan Khan • Reg ${profile.regNo}`);
 
   setText('home-avatar', initials);
   setText('home-name', profile.name);
