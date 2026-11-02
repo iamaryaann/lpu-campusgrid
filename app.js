@@ -1,1568 +1,1132 @@
 // ========================================================
-// LPU CAMPUS NAVIGATOR & HOSTEL MESS CONTROLLER (app.js)
-// Full Interactive Code with Authentication, Map & Mess System
+// CAMPUSGRID v4.0 — NATIVE MOBILE APP CONTROLLER (LPU TOUCH EDITION)
+// Pure Mobile App Experience • Zero Embedded Map (Direct Official Links)
+// 4 Clean Curated Themes • Full Per-Student LocalStorage Persistence
 // ========================================================
 
-// Storage Keys
-const KEY_USERS = 'lpu_users_db_v1';
-const KEY_CURRENT_USER = 'lpu_current_user_v1';
-const KEY_COMMUNITY_REVIEWS = 'lpu_community_reviews_v1';
-const KEY_REBATES = 'lpu_rebates_v1';
-const KEY_RATINGS = 'lpu_mess_ratings_v1';
+const STORAGE_KEYS = {
+  THEME: 'cg_app_theme_v4',
+  PROFILE: 'cg_touch_profile_v3',
+  SUBJECTS: 'cg_touch_subjects_v3',
+  TIMETABLE: 'cg_touch_timetable_v3',
+  EXAMS: 'cg_touch_exams_v3',
+  GATEPASSES: 'cg_touch_gatepasses_v3',
+  RMS: 'cg_touch_rms_v3',
+  REBATES: 'cg_mess_rebates_v3',
+  SCANS: 'cg_touch_mess_scans_v3'
+};
 
-// Application State
-let map = null;
-let markersLayer = null;
-let currentTab = 'map';
-let currentCategory = 'all';
-let currentSelectedDay = 'monday';
-let currentDietFilter = 'all';
-let selectedHostel = 'BH-4';
-let userLocationMarker = null;
+const THEME_ORDER = ['light', 'ocean', 'mint', 'dark'];
+const THEME_LABELS = {
+  light: 'Clean Coral',
+  ocean: 'Ocean Blue',
+  mint: 'Fresh Mint',
+  dark: 'Matte Dark'
+};
+const THEME_META_COLORS = {
+  light: '#f5f7fb',
+  ocean: '#f3f7fd',
+  mint: '#f3f8f5',
+  dark: '#101319'
+};
 
-// Dynamic In-Memory Databases
-let usersDb = [];
-let currentUser = null;
-let communityReviews = [];
-let rebatesList = [];
-let userRatings = {};
+const DEFAULT_PROFILE = {
+  name: 'Verto Student',
+  regNo: '12408912',
+  section: 'K24AI',
+  program: 'B.Tech CSE (AI & Data Science)',
+  hostel: 'BH-4',
+  room: 'B-412',
+  cgpa: '8.74',
+  mentorName: 'Dr. Sandeep Kaur'
+};
 
-// --------------------------------------------------------
-// 1. INITIALIZATION ON DOM LOAD
-// --------------------------------------------------------
+const DEFAULT_SUBJECTS = [
+  { id: 's1', code: 'CSE316', name: 'Operating Systems', faculty: 'Dr. Rajesh Verma', room: '32-405', attended: 35, total: 40 },
+  { id: 's2', code: 'INT254', name: 'Foundations of Machine Learning', faculty: 'Dr. Sandeep Kaur', room: '32-510', attended: 31, total: 36 },
+  { id: 's3', code: 'CSE326', name: 'Internet Programming Lab', faculty: 'Prof. Amanpreet Singh', room: '33-302', attended: 26, total: 28 },
+  { id: 's4', code: 'MTH401', name: 'Probability & Statistics', faculty: 'Dr. Neha Bansal', room: '32-209', attended: 27, total: 36 },
+  { id: 's5', code: 'PES318', name: 'Soft Skills & PEP Aptitude', faculty: 'Prof. Vikramjit Gill', room: '32-104', attended: 17, total: 24 },
+  { id: 's6', code: 'CSE205', name: 'Data Structures & Algorithms', faculty: 'Dr. Ankur Gupta', room: '33-411', attended: 38, total: 42 }
+];
+
+const DEFAULT_TIMETABLE = {
+  Monday: [
+    { id: 't1', time: '09:00 AM - 10:00 AM', code: 'CSE316', title: 'Operating Systems', room: '32-405', type: 'Lecture' },
+    { id: 't2', time: '10:00 AM - 11:00 AM', code: 'INT254', title: 'Foundations of Machine Learning', room: '32-510', type: 'Lecture' },
+    { id: 't3', time: '11:00 AM - 01:00 PM', code: 'CSE326', title: 'Web Programming Lab', room: '33-302', type: 'Lab' },
+    { id: 't4', time: '02:00 PM - 03:00 PM', code: 'MTH401', title: 'Probability & Statistics', room: '32-209', type: 'Lecture' }
+  ],
+  Tuesday: [
+    { id: 't5', time: '09:00 AM - 10:00 AM', code: 'CSE205', title: 'Data Structures & Algorithms', room: '33-411', type: 'Lecture' },
+    { id: 't6', time: '10:00 AM - 11:00 AM', code: 'CSE316', title: 'Operating Systems', room: '32-405', type: 'Lecture' },
+    { id: 't7', time: '01:00 PM - 03:00 PM', code: 'INT254', title: 'Machine Learning Python Lab', room: '32-512', type: 'Lab' }
+  ],
+  Wednesday: [
+    { id: 't8', time: '09:00 AM - 11:00 AM', code: 'CSE205', title: 'DSA Competitive Coding Lab', room: '33-208', type: 'Lab' },
+    { id: 't9', time: '11:00 AM - 12:00 PM', code: 'INT254', title: 'Foundations of Machine Learning', room: '32-510', type: 'Lecture' },
+    { id: 't10', time: '02:00 PM - 03:00 PM', code: 'PES318', title: 'PEP Aptitude & Soft Skills', room: '32-104', type: 'Tutorial' }
+  ],
+  Thursday: [
+    { id: 't11', time: '10:00 AM - 11:00 AM', code: 'MTH401', title: 'Probability & Statistics', room: '32-209', type: 'Lecture' },
+    { id: 't12', time: '11:00 AM - 12:00 PM', code: 'CSE205', title: 'Data Structures & Algorithms', room: '33-411', type: 'Lecture' },
+    { id: 't13', time: '02:00 PM - 04:00 PM', code: 'CSE316', title: 'Linux Kernel & Shell Lab', room: '32-409', type: 'Lab' }
+  ],
+  Friday: [
+    { id: 't14', time: '09:00 AM - 10:00 AM', code: 'INT254', title: 'Foundations of Machine Learning', room: '32-510', type: 'Lecture' },
+    { id: 't15', time: '10:00 AM - 11:00 AM', code: 'CSE205', title: 'Data Structures & Algorithms', room: '33-411', type: 'Lecture' },
+    { id: 't16', time: '02:00 PM - 03:00 PM', code: 'MENTOR', title: 'Faculty Mentor Advisory', room: '32-408B', type: 'Tutorial' }
+  ],
+  Saturday: [
+    { id: 't17', time: '10:00 AM - 12:00 PM', code: 'DSW', title: 'Coding Club / Hackathon Sprint', room: '13-204', type: 'Lab' }
+  ]
+};
+
+const DEFAULT_EXAMS = [
+  { id: 'e1', code: 'CSE316', subject: 'Operating Systems', examType: 'End-Term (ETE)', date: '2026-11-24', time: '09:30 AM - 12:30 PM', room: '34-308', seat: 'Row 3 • Seat 14' },
+  { id: 'e2', code: 'INT254', subject: 'Foundations of Machine Learning', examType: 'End-Term (ETE)', date: '2026-11-27', time: '09:30 AM - 12:30 PM', room: '32-402', seat: 'Row 1 • Seat 06' },
+  { id: 'e3', code: 'CSE205', subject: 'Data Structures & Algorithms', examType: 'End-Term (ETE)', date: '2026-11-30', time: '01:30 PM - 04:30 PM', room: '33-501', seat: 'Row 5 • Seat 22' }
+];
+
+const DEFAULT_GATEPASSES = [
+  {
+    id: 'GP-2026-8941',
+    type: 'Day Out-Pass',
+    destination: 'Law Gate / Phagwara Market',
+    outTime: 'Today 04:30 PM',
+    inTime: 'Today 07:30 PM',
+    reason: 'Project stationery & personal essentials',
+    status: 'Approved'
+  }
+];
+
+const DEFAULT_RMS = [
+  {
+    id: 'RMS-78412',
+    category: 'Hostel Wi-Fi / Sophos IT',
+    location: 'BH-4 Room B-412',
+    issue: 'Sophos Wi-Fi signal drop near desk router.',
+    date: 'Yesterday',
+    status: 'In Progress'
+  }
+];
+
+const FACULTY_CABINS = [
+  { name: 'Dr. Sandeep Kaur', dept: 'School of CSE (AI & ML)', cabin: 'Block 32 • Floor 4 • Cabin 408-B', hours: 'Mon–Fri: 01:00 PM - 02:30 PM', email: 'sandeep.cse@lpu.co.in' },
+  { name: 'Dr. Rajesh Verma', dept: 'School of CSE (Systems & Cloud)', cabin: 'Block 32 • Floor 3 • Cabin 312-A', hours: 'Mon–Fri: 12:00 PM - 01:30 PM', email: 'rajesh.verma@lpu.co.in' },
+  { name: 'Prof. Amanpreet Singh', dept: 'Full-Stack & Web Engineering', cabin: 'Block 33 • Floor 2 • Cabin 205-C', hours: 'Tue–Sat: 02:00 PM - 03:30 PM', email: 'amanpreet.web@lpu.co.in' },
+  { name: 'Dr. Ankur Gupta', dept: 'Competitive Coding & Algorithms', cabin: 'Block 33 • Floor 4 • Cabin 401-A', hours: 'Mon–Fri: 03:00 PM - 04:30 PM', email: 'ankur.dsa@lpu.co.in' },
+  { name: 'Dr. Ritu Malhotra (HOD)', dept: 'Mittal School of Business (MSB)', cabin: 'Block 14 • Floor 2 • Cabin 201', hours: 'Mon–Fri: 11:00 AM - 01:00 PM', email: 'hod.msb@lpu.co.in' },
+  { name: 'Dr. Harpreet Singh', dept: 'Mechanical & Robotics Center', cabin: 'Block 34 • Floor 1 • Cabin 109', hours: 'Mon–Fri: 02:00 PM - 04:00 PM', email: 'harpreet.robo@lpu.co.in' },
+  { name: 'Dr. Meenakshi Sharma', dept: 'Electronics, VLSI & IoT', cabin: 'Block 38 • Floor 3 • Cabin 304', hours: 'Mon–Fri: 12:30 PM - 02:00 PM', email: 'meenakshi.ece@lpu.co.in' },
+  { name: 'Dr. Gurpreet Dhaliwal', dept: 'School of Agriculture (ICAR)', cabin: 'Block 55 • Floor 1 • Cabin 102', hours: 'Mon–Fri: 11:30 AM - 01:00 PM', email: 'agri.dean@lpu.co.in' },
+  { name: 'DSW Student Welfare Desk', dept: 'Clubs, Duty Leave & YouthVibe', cabin: 'Block 13 • Ground Floor • Room 105', hours: 'Mon–Sat: 09:00 AM - 05:30 PM', email: 'dsw@lpu.co.in' },
+  { name: 'Career Services & Placements', dept: 'PEP & Internship NOC Desk', cabin: 'Block 32 • Mezzanine • Desk 4', hours: 'Mon–Sat: 09:30 AM - 05:00 PM', email: 'placements@lpu.co.in' }
+];
+
+const UMS_NOTICES = [
+  { tag: 'Exams', title: 'End-Term Theory & Practical Seating Plan Live', meta: 'Exam Cell • Block 30', desc: 'Carry physical LPU ID Card and maintain >=75% attendance eligibility.' },
+  { tag: 'Placements', title: 'PEP Coding & Mock Interview Drives Open', meta: 'Career Services • Block 32', desc: 'Register on OAS & UMS Placement Portal for upcoming product company tests.' },
+  { tag: 'Hostel', title: 'Digital QR Meal Pass Mandatory at Dining Halls', meta: 'Chief Warden Office', desc: 'Scan your live Meal QR token at turnstiles; 3+ day home leave qualifies for ₹130/day rebate.' },
+  { tag: 'DSW', title: 'One World & YouthVibe Student Registrations', meta: 'DSW • Block 13', desc: 'Approved participants get official On-Duty (OD) attendance credit.' }
+];
+
+// Runtime State
+let appTheme = 'light';
+let profile = {};
+let subjects = [];
+let timetable = {};
+let exams = [];
+let gatePasses = [];
+let rmsTickets = [];
+let rebates = [];
+let messScans = 14;
+
+let selectedTtDay = 'Monday';
+let selectedMessDay = 'monday';
+let selectedCampusCat = 'all';
+let deferredInstallPrompt = null;
+
+// ================= INITIALIZATION =================
 document.addEventListener('DOMContentLoaded', () => {
-  initStorage();
-  initTheme();
-  initClock();
-  initAuth();
-  initMap();
-  initDefaultDay();
-  renderLandmarkList();
-  renderMessMenu();
-  renderEateries();
-  renderCommunityReviews();
-  renderWardenPanel();
-  renderLpuHub();
-  calculateLpuAttendance();
-  calculateLpuMarks();
-  setupSearchAutocomplete();
-  updateLiveMealStatus();
+  loadState();
+  applyThemeUI(appTheme);
 
-  // Periodic updates
-  setInterval(updateLiveMealStatus, 30000); // every 30s
+  const jsDay = new Date().getDay(); // 0=Sun..6=Sat
+  const ttDays = ['Monday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const messDays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+  selectedTtDay = ttDays[jsDay] || 'Monday';
+  selectedMessDay = messDays[jsDay] || 'monday';
+
+  renderAll();
+  calcLpuGrade();
+
+  // Live ticking timestamp for Digital Mess QR
+  updateQrClock();
+  setInterval(updateQrClock, 1000);
+
+  // PWA Service Worker & Install Capture
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredInstallPrompt = e;
+  });
 });
 
-// --------------------------------------------------------
-// 2. LOCAL DATA STORAGE INITIALIZER
-// --------------------------------------------------------
-function initStorage() {
-  // Users
-  const savedUsers = localStorage.getItem(KEY_USERS);
-  if (!savedUsers) {
-    localStorage.setItem(KEY_USERS, JSON.stringify(DEFAULT_USERS));
-    usersDb = [...DEFAULT_USERS];
-  } else {
-    usersDb = JSON.parse(savedUsers);
-  }
+function loadState() {
+  appTheme = localStorage.getItem(STORAGE_KEYS.THEME) || 'light';
+  if (!THEME_ORDER.includes(appTheme)) appTheme = 'light';
 
-  // Current session
-  const savedCurrent = localStorage.getItem(KEY_CURRENT_USER);
-  if (savedCurrent) {
-    currentUser = JSON.parse(savedCurrent);
-  } else {
-    // Default logged in as Rohan Verma for seamless first impression
-    currentUser = usersDb[0];
-    localStorage.setItem(KEY_CURRENT_USER, JSON.stringify(currentUser));
-  }
-
-  // Community reviews
-  const savedReviews = localStorage.getItem(KEY_COMMUNITY_REVIEWS);
-  if (!savedReviews) {
-    localStorage.setItem(KEY_COMMUNITY_REVIEWS, JSON.stringify(DEFAULT_COMMUNITY_REVIEWS));
-    communityReviews = [...DEFAULT_COMMUNITY_REVIEWS];
-  } else {
-    communityReviews = JSON.parse(savedReviews);
-  }
-
-  // Rebates
-  const savedRebates = localStorage.getItem(KEY_REBATES);
-  if (!savedRebates) {
-    localStorage.setItem(KEY_REBATES, JSON.stringify(DEFAULT_REBATES));
-    rebatesList = [...DEFAULT_REBATES];
-  } else {
-    rebatesList = JSON.parse(savedRebates);
-  }
-
-  // Ratings
-  userRatings = JSON.parse(localStorage.getItem(KEY_RATINGS) || '{}');
+  profile = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROFILE) || 'null') || { ...DEFAULT_PROFILE };
+  subjects = JSON.parse(localStorage.getItem(STORAGE_KEYS.SUBJECTS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+  timetable = JSON.parse(localStorage.getItem(STORAGE_KEYS.TIMETABLE) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TIMETABLE));
+  exams = JSON.parse(localStorage.getItem(STORAGE_KEYS.EXAMS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_EXAMS));
+  gatePasses = JSON.parse(localStorage.getItem(STORAGE_KEYS.GATEPASSES) || 'null') || JSON.parse(JSON.stringify(DEFAULT_GATEPASSES));
+  rmsTickets = JSON.parse(localStorage.getItem(STORAGE_KEYS.RMS) || 'null') || JSON.parse(JSON.stringify(DEFAULT_RMS));
+  rebates = JSON.parse(localStorage.getItem(STORAGE_KEYS.REBATES) || 'null') || (typeof DEFAULT_REBATES !== 'undefined' ? JSON.parse(JSON.stringify(DEFAULT_REBATES)) : []);
+  messScans = parseInt(localStorage.getItem(STORAGE_KEYS.SCANS) || '14', 10);
 }
 
-// --------------------------------------------------------
-// 3. THEME & DISPLAY UTILITIES
-// --------------------------------------------------------
-function initTheme() {
-  const themeToggle = document.getElementById('theme-toggle');
-  const themeIcon = document.getElementById('theme-icon');
-  
-  // Default to aesthetic dark mode always
-  const savedTheme = localStorage.getItem('lpu_theme') || 'dark';
-  localStorage.setItem('lpu_theme', savedTheme);
+function renderAll() {
+  renderProfileAndHome();
+  renderAttendance();
+  renderTimetable();
+  renderExams();
+  renderMessMenu();
+  renderMessQr();
+  renderCafes();
+  renderRebates();
+  renderCampusDirectory();
+  renderCabinsList();
+  renderRmsList();
+  renderRulesList();
+  renderGatePasses();
+}
 
-  if (savedTheme === 'dark') {
-    document.documentElement.classList.add('dark');
-    if (themeIcon) themeIcon.classList.replace('fa-moon', 'fa-sun');
-  } else {
-    document.documentElement.classList.remove('dark');
-    if (themeIcon) themeIcon.classList.replace('fa-sun', 'fa-moon');
-  }
+// ================= THEME SYSTEM =================
+function setAppTheme(themeName) {
+  if (!THEME_ORDER.includes(themeName)) return;
+  appTheme = themeName;
+  localStorage.setItem(STORAGE_KEYS.THEME, appTheme);
+  applyThemeUI(appTheme);
+  showToast('Theme: ' + THEME_LABELS[appTheme]);
+}
 
-  themeToggle.addEventListener('click', () => {
-    const isDark = document.documentElement.classList.toggle('dark');
-    localStorage.setItem('lpu_theme', isDark ? 'dark' : 'light');
-    if (isDark) {
-      themeIcon.classList.replace('fa-moon', 'fa-sun');
+function cycleAppTheme() {
+  const idx = THEME_ORDER.indexOf(appTheme);
+  const next = THEME_ORDER[(idx + 1) % THEME_ORDER.length];
+  setAppTheme(next);
+}
+
+function applyThemeUI(themeName) {
+  document.documentElement.setAttribute('data-theme', themeName);
+  const meta = document.getElementById('meta-theme-color');
+  if (meta) meta.setAttribute('content', THEME_META_COLORS[themeName] || '#f5f7fb');
+
+  THEME_ORDER.forEach((t) => {
+    const btn = document.getElementById('thm-btn-' + t);
+    if (!btn) return;
+    if (t === themeName) {
+      btn.style.borderColor = 'var(--accent)';
+      btn.style.backgroundColor = 'var(--accent-soft)';
     } else {
-      themeIcon.classList.replace('fa-sun', 'fa-moon');
-    }
-    if (map) {
-      map.invalidateSize();
+      btn.style.borderColor = 'var(--border)';
+      btn.style.backgroundColor = 'var(--surface-muted)';
     }
   });
 }
 
-function initClock() {
-  const clockEl = document.getElementById('live-clock');
-  function updateTime() {
-    const now = new Date();
-    clockEl.textContent = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  }
-  updateTime();
-  setInterval(updateTime, 1000);
-}
-
-// --------------------------------------------------------
-// 4. AUTHENTICATION & SESSION MANAGEMENT
-// --------------------------------------------------------
-function initAuth() {
-  updateAuthUI();
-}
-
-function updateAuthUI() {
-  const loggedOutDiv = document.getElementById('auth-logged-out');
-  const loggedInDiv = document.getElementById('auth-logged-in');
-  const wardenNavBtn = document.getElementById('nav-btn-warden');
-  const quickPostAvatar = document.getElementById('quick-post-avatar');
-
-  if (currentUser) {
-    loggedOutDiv.classList.add('hidden');
-    loggedInDiv.classList.remove('hidden');
-
-    document.getElementById('user-nav-avatar').src = currentUser.avatar;
-    document.getElementById('user-nav-name').textContent = currentUser.name.split(' ')[0];
-    document.getElementById('user-nav-badge').textContent = currentUser.hostel || 'LPU';
-
-    if (quickPostAvatar) quickPostAvatar.src = currentUser.avatar;
-
-    // Show warden tab if role is warden
-    if (currentUser.role === 'warden') {
-      wardenNavBtn.classList.remove('hidden');
-      wardenNavBtn.classList.add('flex');
-    } else {
-      wardenNavBtn.classList.add('hidden');
-      wardenNavBtn.classList.remove('flex');
-    }
-
-    // Set default hostel selector to user's hostel if in hostel list
-    if (currentUser.hostel && currentUser.hostel.startsWith('BH-') || currentUser.hostel.startsWith('GH-')) {
-      const hostelSelect = document.getElementById('hostel-selector');
-      if (hostelSelect) {
-        hostelSelect.value = currentUser.hostel;
-        selectedHostel = currentUser.hostel;
-      }
-      const myMessInd = document.getElementById('my-mess-indicator');
-      if (myMessInd) myMessInd.classList.remove('hidden');
-    }
-
-  } else {
-    loggedOutDiv.classList.remove('hidden');
-    loggedInDiv.classList.add('hidden');
-    wardenNavBtn.classList.add('hidden');
-    wardenNavBtn.classList.remove('flex');
-    if (quickPostAvatar) quickPostAvatar.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=Guest';
-  }
-}
-
-function openAuthModal(tab = 'signin') {
-  switchAuthTab(tab);
-  document.getElementById('auth-modal').classList.remove('hidden');
-}
-
-function closeAuthModal() {
-  document.getElementById('auth-modal').classList.add('hidden');
-}
-
-function switchAuthTab(tab) {
-  const signinBtn = document.getElementById('auth-tab-signin');
-  const signupBtn = document.getElementById('auth-tab-signup');
-  const signinForm = document.getElementById('signin-form');
-  const signupForm = document.getElementById('signup-form');
-
-  if (tab === 'signin') {
-    signinBtn.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-lpu-600 text-lpu-600';
-    signupBtn.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600';
-    signinForm.classList.remove('hidden');
-    signupForm.classList.add('hidden');
-  } else {
-    signupBtn.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-lpu-600 text-lpu-600';
-    signinBtn.className = 'flex-1 pb-2.5 text-xs font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-600';
-    signupForm.classList.remove('hidden');
-    signinForm.classList.add('hidden');
-  }
-}
-
-function handleSignInSubmit(e) {
-  e.preventDefault();
-  const identifier = document.getElementById('login-identifier').value.trim().toLowerCase();
-  const password = document.getElementById('login-password').value;
-
-  const found = usersDb.find(u => 
-    (u.regNo.toLowerCase() === identifier || u.email.toLowerCase() === identifier) &&
-    u.password === password
-  );
-
-  if (found) {
-    currentUser = found;
-    localStorage.setItem(KEY_CURRENT_USER, JSON.stringify(currentUser));
-    updateAuthUI();
-    renderMessMenu();
-    closeAuthModal();
-    alert(`Welcome back to CampusGrid, ${currentUser.name}!`);
-  } else {
-    alert('Invalid Registration Number/Email or Password! Please check or use 1-Click Demo Login.');
-  }
-}
-
-function handleSignUpSubmit(e) {
-  e.preventDefault();
-  const name = document.getElementById('reg-name').value.trim();
-  const regNo = document.getElementById('reg-no').value.trim();
-  const email = document.getElementById('reg-email').value.trim();
-  const hostel = document.getElementById('reg-hostel').value;
-  const password = document.getElementById('reg-password').value;
-
-  // Check duplicate
-  if (usersDb.some(u => u.regNo === regNo || u.email.toLowerCase() === email.toLowerCase())) {
-    alert('This Registration Number or Email is already registered!');
-    return;
-  }
-
-  const newUser = {
-    id: 'user_' + Date.now(),
-    regNo: regNo,
-    email: email,
-    name: name,
-    password: password,
-    role: 'student',
-    hostel: hostel,
-    room: 'Room 101',
-    program: 'B.Tech / Professional Degree',
-    messPlan: 'Standard North Indian Mess',
-    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
-    bookmarks: []
-  };
-
-  usersDb.push(newUser);
-  localStorage.setItem(KEY_USERS, JSON.stringify(usersDb));
-
-  currentUser = newUser;
-  localStorage.setItem(KEY_CURRENT_USER, JSON.stringify(currentUser));
-
-  updateAuthUI();
-  renderMessMenu();
-  closeAuthModal();
-  alert(`Registration successful! Welcome to CampusGrid, ${name}.`);
-}
-
-function demoLogin(type) {
-  if (type === 'student1') {
-    currentUser = usersDb.find(u => u.regNo === '12204598') || usersDb[0];
-  } else if (type === 'student2') {
-    currentUser = usersDb.find(u => u.regNo === '12215890') || usersDb[1];
-  } else if (type === 'warden') {
-    currentUser = usersDb.find(u => u.role === 'warden') || usersDb[2];
-  }
-
-  localStorage.setItem(KEY_CURRENT_USER, JSON.stringify(currentUser));
-  updateAuthUI();
-  renderMessMenu();
-  closeAuthModal();
-  alert(`Logged in as ${currentUser.name} (${currentUser.role.toUpperCase()})`);
-}
-
-function handleLogout() {
-  currentUser = null;
-  localStorage.removeItem(KEY_CURRENT_USER);
-  closeProfileModal();
-  updateAuthUI();
-  switchTab('map');
-  alert('You have logged out successfully.');
-}
-
-// --------------------------------------------------------
-// 5. PROFILE & VERTO DIGITAL ID CARD MODAL
-// --------------------------------------------------------
-function openProfileModal() {
-  if (!currentUser) {
-    openAuthModal('signin');
-    return;
-  }
-
-  document.getElementById('card-name').textContent = currentUser.name;
-  document.getElementById('card-program').textContent = currentUser.program;
-  document.getElementById('card-reg').textContent = currentUser.regNo;
-  document.getElementById('card-hostel').textContent = `${currentUser.hostel} (${currentUser.room || 'Allotted'})`;
-  document.getElementById('card-mess').textContent = currentUser.messPlan;
-  document.getElementById('card-avatar').src = currentUser.avatar;
-
-  document.getElementById('profile-modal').classList.remove('hidden');
-}
-
-function closeProfileModal() {
-  document.getElementById('profile-modal').classList.add('hidden');
-}
-
-function openProfileOrLoginMobile() {
-  if (currentUser) {
-    openProfileModal();
-  } else {
-    openAuthModal('signin');
-  }
-}
-
-function jumpToMyMess() {
-  closeProfileModal();
-  switchTab('mess');
-  if (currentUser && currentUser.hostel) {
-    const sel = document.getElementById('hostel-selector');
-    if (sel) {
-      sel.value = currentUser.hostel;
-      onHostelOrDayChange();
-    }
-  }
-}
-
-// --------------------------------------------------------
-// 6. TAB NAVIGATION
-// --------------------------------------------------------
-function switchTab(tabId) {
-  currentTab = tabId;
-  const tabs = ['touch', 'map', 'lpu', 'mess', 'community', 'eateries', 'warden', 'info', 'ppt'];
-
-  tabs.forEach(t => {
-    const sec = document.getElementById(`tab-${t}`);
-    const navBtn = document.getElementById(`nav-btn-${t}`);
-    const mNavBtn = document.getElementById(`m-nav-${t}`);
-
-    if (sec) {
-      if (t === tabId) {
-        sec.classList.remove('hidden');
-        sec.classList.add('block');
-        if (navBtn) navBtn.classList.add('active');
-        if (mNavBtn) {
-          mNavBtn.classList.add('text-lpu-600', 'dark:text-lpu-400');
-          mNavBtn.classList.remove('text-slate-500', 'dark:text-slate-400');
-        }
-      } else {
-        sec.classList.remove('block');
-        sec.classList.add('hidden');
-        if (navBtn) navBtn.classList.remove('active');
-        if (mNavBtn) {
-          mNavBtn.classList.remove('text-lpu-600', 'dark:text-lpu-400');
-          mNavBtn.classList.add('text-slate-500', 'dark:text-slate-400');
-        }
-      }
-    }
+// ================= NAVIGATION & SUBTABS =================
+function switchScreen(screenId) {
+  ['home', 'classes', 'mess', 'campus', 'profile'].forEach((id) => {
+    const sec = document.getElementById('screen-' + id);
+    const nav = document.getElementById('bnav-' + id);
+    if (sec) sec.classList.toggle('hidden', id !== screenId);
+    if (nav) nav.classList.toggle('active', id === screenId);
   });
-
-  if (tabId === 'map' && map) {
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 200);
-  }
-
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// --------------------------------------------------------
-// PROJECT PPT SLIDE DECK CONTROLLER
-// --------------------------------------------------------
-let currentPptSlide = 1;
-const totalPptSlides = 8;
+function switchSubTab(group, sub) {
+  const map = {
+    classes: { prefix: 'cls', items: ['attendance', 'timetable', 'exams'] },
+    mess: { prefix: 'mess', items: ['menu', 'qr', 'cafes', 'rebate'] },
+    campus: { prefix: 'cmp', items: ['blocks', 'cabins', 'rms', 'portals'] }
+  };
+  const cfg = map[group];
+  if (!cfg) return;
 
-function showPptSlide(n) {
-  if (n < 1) n = 1;
-  if (n > totalPptSlides) n = totalPptSlides;
-  currentPptSlide = n;
-
-  document.querySelectorAll('.ppt-slide').forEach(s => {
-    s.classList.add('hidden');
-    s.classList.remove('block');
+  cfg.items.forEach((item) => {
+    const btn = document.getElementById(`seg-${cfg.prefix}-${item}`);
+    const view = document.getElementById(`sub-${cfg.prefix}-${item}`);
+    if (btn) btn.classList.toggle('active', item === sub);
+    if (view) view.classList.toggle('hidden', item !== sub);
   });
+}
 
-  const activeSlide = document.getElementById(`ppt-slide-${n}`);
-  if (activeSlide) {
-    activeSlide.classList.remove('hidden');
-    activeSlide.classList.add('block');
+function jumpTo(screenId, subTab) {
+  switchScreen(screenId);
+  if (subTab) switchSubTab(screenId, subTab);
+}
+
+function openQuickMealQr() {
+  jumpTo('mess', 'qr');
+}
+
+// ================= GOOGLE MAPS DIRECT LINK HELPER (NO IN-APP MAP) =================
+function buildGoogleMapsUrl(queryOrCoords) {
+  if (Array.isArray(queryOrCoords) && queryOrCoords.length === 2) {
+    return `https://www.google.com/maps/search/?api=1&query=${queryOrCoords[0]},${queryOrCoords[1]}`;
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(queryOrCoords + ' Lovely Professional University Phagwara')}`;
+}
+
+function roomToMapsUrl(roomStr) {
+  const blockMatch = String(roomStr || '').match(/^(\d{1,2})/);
+  if (blockMatch && typeof CAMPUS_LOCATIONS !== 'undefined') {
+    const bNum = blockMatch[1];
+    const found = CAMPUS_LOCATIONS.find((l) => l.name.includes('Block ' + bNum));
+    if (found && found.coords) return buildGoogleMapsUrl(found.coords);
+    return buildGoogleMapsUrl('Block ' + bNum);
+  }
+  return buildGoogleMapsUrl('Lovely Professional University Campus');
+}
+
+// ================= HOME & PROFILE RENDERING =================
+function getInitials(name) {
+  const parts = String(name || 'VS').trim().split(/\s+/);
+  return ((parts[0]?.[0] || 'V') + (parts[1]?.[0] || '')).toUpperCase();
+}
+
+function computeAggregateAttendance() {
+  let att = 0;
+  let tot = 0;
+  subjects.forEach((s) => {
+    att += Number(s.attended || 0);
+    tot += Number(s.total || 0);
+  });
+  const pct = tot > 0 ? (att / tot) * 100 : 100;
+  return { att, tot, pct };
+}
+
+function renderProfileAndHome() {
+  const initials = getInitials(profile.name);
+  const hostelLabel = profile.hostel === 'Day Scholar' ? 'Day Scholar' : `${profile.hostel} (${profile.room || '-'})`;
+  const { att, tot, pct } = computeAggregateAttendance();
+  const pctStr = pct.toFixed(1) + '%';
+
+  // Topbar
+  setText('top-sec-pill', profile.section || 'LPU');
+  setText('top-greeting', `Hi, ${String(profile.name || 'Verto').split(' ')[0]} • Reg ${profile.regNo}`);
+
+  // Home Wallet Card
+  setText('home-avatar', initials);
+  setText('home-name', profile.name);
+  setText('home-reg', profile.regNo);
+  setText('home-hostel', hostelLabel);
+  setText('home-prog', profile.program);
+  setText('home-att-pct', pctStr);
+  setText('home-cgpa', profile.cgpa || '8.50');
+
+  const dot = document.getElementById('home-att-dot');
+  if (dot) {
+    dot.className = 'w-2 h-2 rounded-full ' + (pct >= 75 ? 'bg-emerald-400' : 'bg-rose-400');
   }
 
-  const numEl = document.getElementById('ppt-current-num');
-  if (numEl) numEl.textContent = `Slide ${n} / ${totalPptSlides}`;
+  // Today's Classes on Home
+  const jsDay = new Date().getDay();
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const todayName = dayNames[jsDay];
+  const todayList = timetable[todayName] || [];
+  setText('home-today-count', `${todayList.length} ${todayList.length === 1 ? 'Class' : 'Classes'}`);
+  setText('home-day-sub', todayName === 'Sunday' ? 'Sunday — No regular classes' : `${todayName} • Section ${profile.section}`);
 
-  const thumbBtns = document.querySelectorAll('.ppt-thumb-btn');
-  thumbBtns.forEach((b, idx) => {
-    if (idx + 1 === n) {
-      b.className = 'ppt-thumb-btn active p-2 rounded-xl bg-slate-800 border border-amber-500 text-center text-[10px] font-bold text-white transition';
+  const clsBox = document.getElementById('home-classes-list');
+  if (clsBox) {
+    if (todayList.length === 0) {
+      clsBox.innerHTML = `<div class="app-card-muted p-3 text-xs text-[var(--text-sub)] text-center">No scheduled lectures today. Enjoy your break!</div>`;
     } else {
-      b.className = 'ppt-thumb-btn p-2 rounded-xl bg-slate-900 border border-white/5 text-center text-[10px] font-bold text-slate-400 hover:text-white transition';
-    }
-  });
-}
-
-function nextPptSlide() {
-  if (currentPptSlide < totalPptSlides) {
-    showPptSlide(currentPptSlide + 1);
-  }
-}
-
-function prevPptSlide() {
-  if (currentPptSlide > 1) {
-    showPptSlide(currentPptSlide - 1);
-  }
-}
-
-function goToPptSlide(n) {
-  showPptSlide(n);
-}
-
-// --------------------------------------------------------
-// 7. LEAFLET MAP IMPLEMENTATION
-// --------------------------------------------------------
-function initMap() {
-  const mapContainer = document.getElementById('lpu-map');
-  if (!mapContainer) return;
-
-  // Ensure dimensions are explicitly set
-  mapContainer.style.height = '540px';
-  mapContainer.style.minHeight = '540px';
-  mapContainer.style.width = '100%';
-
-  if (map) {
-    try {
-      map.remove();
-    } catch (e) {
-      console.warn('Map cleanup error:', e);
-    }
-  }
-
-  // Initialize Leaflet map centered at LPU
-  map = L.map('lpu-map', {
-    zoomControl: true,
-    scrollWheelZoom: true,
-    attributionControl: true
-  }).setView(CAMPUS_CENTER, DEFAULT_ZOOM);
-
-  // 100% Guaranteed OpenStreetMap tiles with custom CSS Dark Cyberpunk invert filter
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    subdomains: ['a', 'b', 'c'],
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Lovely Professional University'
-  }).addTo(map);
-
-  markersLayer = L.layerGroup().addTo(map);
-  renderMarkers(CAMPUS_LOCATIONS);
-
-  // Trigger resize updates to avoid Leaflet 0-height rendering bug
-  setTimeout(() => {
-    if (map) {
-      map.invalidateSize();
-    }
-  }, 200);
-
-  setTimeout(() => {
-    if (map) {
-      map.invalidateSize();
-    }
-  }, 700);
-}
-
-function createCustomPin(color, icon) {
-  return L.divIcon({
-    className: 'custom-leaflet-marker',
-    html: `
-      <div class="custom-pin" style="background-color: ${color}; width: 34px; height: 34px; box-shadow: 0 0 16px ${color}, 0 4px 10px rgba(0,0,0,0.8);">
-        <i class="fa-solid ${icon} text-white text-xs"></i>
-      </div>
-    `,
-    iconSize: [34, 34],
-    iconAnchor: [17, 34],
-    popupAnchor: [0, -32]
-  });
-}
-
-function renderMarkers(locations) {
-  if (!markersLayer) return;
-  markersLayer.clearLayers();
-
-  locations.forEach(loc => {
-    const icon = createCustomPin(loc.color, loc.icon);
-    const marker = L.marker(loc.coords, { icon: icon });
-
-    const popupContent = `
-      <div class="w-64 p-3 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100 rounded-xl font-['Plus_Jakarta_Sans',sans-serif]">
-        <div class="flex items-center justify-between mb-1.5">
-          <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded" style="background-color: ${loc.color}20; color: ${loc.color}">
-            ${loc.category}
-          </span>
-          <span class="text-[11px] text-slate-400"><i class="fa-regular fa-clock mr-1"></i>Open</span>
-        </div>
-        <h4 class="font-bold text-sm leading-tight text-slate-900 dark:text-white mb-1">${loc.shortName}</h4>
-        <p class="text-xs text-slate-600 dark:text-slate-300 mb-2 line-clamp-2">${loc.description}</p>
-        <div class="text-[11px] bg-slate-100 dark:bg-slate-800 p-2 rounded-lg mb-2 text-slate-600 dark:text-slate-300">
-          <i class="fa-solid fa-utensils mr-1 text-amber-500"></i> ${loc.nearestFood}
-        </div>
-        <button onclick="openLocationDetails('${loc.id}')" class="w-full py-1.5 bg-lpu-600 hover:bg-lpu-700 text-white font-bold text-xs rounded-lg transition shadow-sm">
-          View Block Details
-        </button>
-      </div>
-    `;
-
-    marker.bindPopup(popupContent);
-    marker.locationId = loc.id;
-    markersLayer.addLayer(marker);
-  });
-}
-
-function filterMapCategory(cat, btnEl) {
-  currentCategory = cat;
-
-  const pills = document.querySelectorAll('#category-filter-bar .cat-pill');
-  pills.forEach(p => p.classList.remove('active'));
-  const targetBtn = btnEl || (typeof event !== 'undefined' && event ? event.currentTarget : null);
-  if (targetBtn) targetBtn.classList.add('active');
-
-  const filtered = cat === 'all' 
-    ? CAMPUS_LOCATIONS 
-    : CAMPUS_LOCATIONS.filter(item => item.category === cat);
-
-  renderMarkers(filtered);
-  renderLandmarkList(filtered);
-
-  document.getElementById('current-filter-label').textContent = cat.charAt(0).toUpperCase() + cat.slice(1);
-}
-
-function renderLandmarkList(locations = CAMPUS_LOCATIONS) {
-  const container = document.getElementById('landmark-list');
-  const countEl = document.getElementById('location-count');
-  if (!container) return;
-
-  countEl.textContent = locations.length;
-  container.innerHTML = '';
-
-  if (locations.length === 0) {
-    container.innerHTML = `<div class="p-4 text-center text-xs text-slate-400">No locations found.</div>`;
-    return;
-  }
-
-  locations.forEach(loc => {
-    const card = document.createElement('div');
-    card.className = 'p-3 hover:bg-slate-50 dark:hover:bg-slate-700/50 rounded-xl cursor-pointer transition flex items-start gap-3';
-    card.onclick = () => focusLocation(loc.id);
-
-    card.innerHTML = `
-      <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-xs shadow-sm mt-0.5" style="background-color: ${loc.color}">
-        <i class="fa-solid ${loc.icon}"></i>
-      </div>
-      <div class="flex-1 min-w-0">
-        <div class="flex items-center justify-between">
-          <h4 class="font-bold text-xs text-slate-900 dark:text-white truncate">${loc.shortName}</h4>
-        </div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">${loc.name}</p>
-        <span class="inline-block mt-1 text-[10px] font-semibold text-lpu-600 dark:text-lpu-400">
-          <i class="fa-solid fa-location-dot mr-1"></i>Show on Map
-        </span>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-}
-
-function focusLocation(locId) {
-  const target = CAMPUS_LOCATIONS.find(l => l.id === locId);
-  if (!target || !map) return;
-
-  map.flyTo(target.coords, 18, {
-    animate: true,
-    duration: 1.2
-  });
-
-  markersLayer.eachLayer(layer => {
-    if (layer.locationId === locId) {
-      setTimeout(() => {
-        layer.openPopup();
-      }, 1000);
-    }
-  });
-
-  if (window.innerWidth < 768) {
-    openLocationDetails(locId);
-  }
-}
-
-function resetMapView() {
-  if (map) {
-    map.flyTo(CAMPUS_CENTER, DEFAULT_ZOOM, {
-      duration: 1.2
-    });
-  }
-}
-
-function locateUserPosition() {
-  if (!navigator.geolocation) {
-    alert('Geolocation is not supported by your browser.');
-    return;
-  }
-
-  navigator.geolocation.getCurrentPosition(
-    position => {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-
-      if (userLocationMarker) {
-        map.removeLayer(userLocationMarker);
-      }
-
-      userLocationMarker = L.circleMarker([lat, lng], {
-        radius: 9,
-        fillColor: '#3b82f6',
-        color: '#ffffff',
-        weight: 3,
-        opacity: 1,
-        fillOpacity: 0.9
-      }).addTo(map);
-
-      userLocationMarker.bindPopup('<b class="text-xs">You are here!</b>').openPopup();
-      map.flyTo([lat, lng], 17);
-    },
-    error => {
-      alert('Simulated user location placed at Block 32.');
-      map.flyTo([31.2542, 75.7025], 18);
-    }
-  );
-}
-
-// --------------------------------------------------------
-// 8. SEARCH & AUTOCOMPLETE
-// --------------------------------------------------------
-function setupSearchAutocomplete() {
-  const searchInput = document.getElementById('map-search-input');
-  const suggestionsBox = document.getElementById('search-suggestions');
-  const clearBtn = document.getElementById('clear-search-btn');
-
-  if (!searchInput) return;
-
-  searchInput.addEventListener('input', (e) => {
-    const query = e.target.value.toLowerCase().trim();
-
-    if (query.length > 0) {
-      clearBtn.classList.remove('hidden');
-    } else {
-      clearBtn.classList.add('hidden');
-      suggestionsBox.classList.add('hidden');
-      return;
-    }
-
-    const matches = CAMPUS_LOCATIONS.filter(item => 
-      item.name.toLowerCase().includes(query) ||
-      item.shortName.toLowerCase().includes(query) ||
-      item.dept.toLowerCase().includes(query) ||
-      item.description.toLowerCase().includes(query)
-    );
-
-    if (matches.length === 0) {
-      suggestionsBox.innerHTML = `<div class="p-3 text-xs text-slate-400">No matching campus landmark found.</div>`;
-    } else {
-      suggestionsBox.innerHTML = matches.slice(0, 6).map(m => `
-        <div onclick="selectSearchResult('${m.id}')" class="p-2.5 hover:bg-slate-50 dark:hover:bg-slate-700/60 cursor-pointer flex items-center justify-between border-b border-slate-100 dark:border-slate-700 last:border-none">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid ${m.icon} text-lpu-500 text-xs"></i>
-            <div>
-              <div class="text-xs font-bold text-slate-800 dark:text-white">${m.shortName}</div>
-              <div class="text-[10px] text-slate-400 truncate w-48 sm:w-80">${m.name}</div>
+      clsBox.innerHTML = todayList.slice(0, 3).map((c) => `
+        <div class="app-card-muted p-3 flex items-center justify-between gap-2.5">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5">
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(c.code)}</span>
+              <span class="text-[11px] font-semibold text-[var(--text-sub)]">${esc(c.time)}</span>
             </div>
+            <p class="text-xs font-extrabold text-[var(--text-main)] truncate mt-1">${esc(c.title)}</p>
           </div>
-          <span class="text-[10px] font-semibold text-slate-400 uppercase">${m.category}</span>
+          <a href="${roomToMapsUrl(c.room)}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[11px] font-bold text-[var(--text-main)] no-underline shrink-0 tap-scale">
+            ${esc(c.room)} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-[var(--accent)] ml-0.5"></i>
+          </a>
         </div>
       `).join('');
     }
+  }
 
-    suggestionsBox.classList.remove('hidden');
-  });
+  // Live Mess Preview on Home
+  const messBody = document.getElementById('home-mess-body');
+  if (messBody && typeof getCurrentMealInfo === 'function' && typeof MESS_SCHEDULE !== 'undefined') {
+    const info = getCurrentMealInfo();
+    const dKeys = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const todaySchedule = MESS_SCHEDULE[dKeys[jsDay]] || MESS_SCHEDULE.monday;
+    const mealObj = todaySchedule.meals[info.meal] || todaySchedule.meals.lunch;
 
-  clearBtn.addEventListener('click', () => {
-    searchInput.value = '';
-    clearBtn.classList.add('hidden');
-    suggestionsBox.classList.add('hidden');
-    renderLandmarkList(CAMPUS_LOCATIONS);
-    renderMarkers(CAMPUS_LOCATIONS);
-  });
-
-  document.addEventListener('click', (e) => {
-    if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
-      suggestionsBox.classList.add('hidden');
+    const badge = document.getElementById('home-mess-badge');
+    if (badge) {
+      badge.textContent = info.status === 'active' ? 'Serving Now' : 'Next Meal';
+      badge.className = 'px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase ' +
+        (info.status === 'active' ? 'bg-emerald-500/15 text-emerald-600' : 'bg-amber-500/15 text-amber-600');
     }
-  });
-}
+    setText('home-mess-title', `${info.name}`);
 
-function selectSearchResult(id) {
-  const suggestionsBox = document.getElementById('search-suggestions');
-  suggestionsBox.classList.add('hidden');
-  focusLocation(id);
-}
+    messBody.innerHTML = `
+      <div class="app-card-muted p-3 space-y-1.5">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-extrabold text-[var(--text-main)]">${esc(mealObj.title)}</span>
+          <span class="text-[11px] font-semibold text-[var(--text-sub)]">${esc(mealObj.timing)}</span>
+        </div>
+        <p class="text-xs text-[var(--text-sub)] leading-relaxed">${mealObj.items.slice(0, 3).map(esc).join(' • ')}</p>
+      </div>
+    `;
+  }
 
-// --------------------------------------------------------
-// 9. LOCATION MODAL
-// --------------------------------------------------------
-function openLocationDetails(locId) {
-  const target = CAMPUS_LOCATIONS.find(l => l.id === locId);
-  if (!target) return;
-
-  document.getElementById('modal-title').textContent = target.name;
-  document.getElementById('modal-category-badge').textContent = target.category.toUpperCase();
-  document.getElementById('modal-description').textContent = target.description;
-  document.getElementById('modal-dept').textContent = target.dept;
-  document.getElementById('modal-nearest-food').textContent = target.nearestFood;
-  const tEl = document.getElementById('modal-timings');
-  if (tEl) tEl.textContent = target.timings || '08:00 AM - 08:00 PM';
-  const trEl = document.getElementById('modal-transit');
-  if (trEl) trEl.textContent = target.transit || '₹10 Campus E-Rickshaw Shuttle Available';
-
-  const navBtn = document.getElementById('modal-navigate-btn');
-  navBtn.onclick = () => {
-    closeLocationModal();
-    switchTab('map');
-    focusLocation(locId);
-  };
-
-  document.getElementById('location-modal').classList.remove('hidden');
-}
-
-function closeLocationModal() {
-  document.getElementById('location-modal').classList.add('hidden');
-}
-
-// --------------------------------------------------------
-// 10. HOSTEL MESS CONTROLLER & MENUS
-// --------------------------------------------------------
-function initDefaultDay() {
-  const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
-  const todayIndex = new Date().getDay();
-  currentSelectedDay = days[todayIndex];
-  highlightDayButton(currentSelectedDay);
-}
-
-function selectDay(dayKey) {
-  currentSelectedDay = dayKey;
-  highlightDayButton(dayKey);
-  renderMessMenu();
-}
-
-function highlightDayButton(dayKey) {
-  const btns = document.querySelectorAll('#day-buttons-grid .day-btn');
-  btns.forEach(b => {
-    if (b.getAttribute('data-day') === dayKey) {
-      b.classList.add('active');
-    } else {
-      b.classList.remove('active');
-    }
-  });
-
-  const dayInfo = MESS_SCHEDULE[dayKey];
-  document.getElementById('current-day-label').textContent = `${dayInfo.dayName} • ${dayInfo.theme}`;
-}
-
-function onHostelOrDayChange() {
-  selectedHostel = document.getElementById('hostel-selector').value;
-  renderMessMenu();
-}
-
-function setDietFilter(filter) {
-  currentDietFilter = filter;
-  const buttons = {
-    'all': 'diet-btn-all',
-    'pure-veg': 'diet-btn-veg',
-    'special': 'diet-btn-special'
-  };
-
-  Object.entries(buttons).forEach(([key, id]) => {
-    const btn = document.getElementById(id);
-    if (key === filter) {
-      btn.className = 'px-2.5 py-1 rounded-lg font-semibold bg-white dark:bg-slate-800 text-lpu-600 shadow-sm';
-    } else {
-      btn.className = 'px-2.5 py-1 rounded-lg font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-white';
-    }
-  });
-
-  renderMessMenu();
-}
-
-function renderMessMenu() {
-  const container = document.getElementById('meal-cards-container');
-  if (!container) return;
-
-  const dayData = MESS_SCHEDULE[currentSelectedDay];
-  if (!dayData) return;
-
-  const mealKeys = [
-    { key: 'breakfast', name: 'Breakfast', icon: 'fa-mug-saucer', color: 'from-amber-500 to-orange-500' },
-    { key: 'lunch', name: 'Lunch', icon: 'fa-bowl-rice', color: 'from-emerald-500 to-teal-600' },
-    { key: 'snacks', name: 'Evening Tea', icon: 'fa-cookie-bite', color: 'from-orange-500 to-red-500' },
-    { key: 'dinner', name: 'Dinner', icon: 'fa-moon', color: 'from-indigo-500 to-purple-600' }
-  ];
-
-  const currentMealInfo = getCurrentMealInfo();
-  container.innerHTML = '';
-
-  mealKeys.forEach(m => {
-    const meal = dayData.meals[m.key];
-    const isCurrentlyActive = (currentMealInfo.meal === m.key && currentMealInfo.status === 'active');
-    const ratingKey = `${currentSelectedDay}_${m.key}_${selectedHostel}`;
-    const savedUserVote = userRatings[ratingKey];
-
-    const currentRating = savedUserVote ? savedUserVote.rating : meal.rating;
-    const currentVotes = savedUserVote ? meal.votes + 1 : meal.votes;
-
-    const card = document.createElement('div');
-    card.className = `bg-white dark:bg-slate-800 rounded-2xl shadow-sm border ${
-      isCurrentlyActive 
-        ? 'border-2 border-lpu-500 ring-4 ring-lpu-500/10' 
-        : 'border-slate-200 dark:border-slate-700'
-    } flex flex-col overflow-hidden hover-card`;
-
-    card.innerHTML = `
-      <div class="p-4 bg-gradient-to-r ${m.color} text-white relative">
+  // UMS Notices
+  const noticesBox = document.getElementById('home-notices-list');
+  if (noticesBox) {
+    noticesBox.innerHTML = UMS_NOTICES.map((n) => `
+      <div class="app-card-muted p-3 space-y-1">
         <div class="flex items-center justify-between">
-          <span class="text-xs uppercase font-extrabold tracking-wider bg-black/25 px-2 py-0.5 rounded-md flex items-center gap-1">
-            <i class="fa-solid ${m.icon}"></i> ${m.name}
-          </span>
-          ${isCurrentlyActive ? '<span class="px-2 py-0.5 text-[10px] uppercase font-black bg-emerald-400 text-slate-900 rounded-full animate-pulse"><i class="fa-solid fa-circle mr-1 text-[8px]"></i> Serving Now</span>' : ''}
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(n.tag)}</span>
+          <span class="text-[10px] font-semibold text-[var(--text-sub)]">${esc(n.meta)}</span>
         </div>
-        <h3 class="text-base font-extrabold mt-2 leading-tight">${meal.title}</h3>
-        <div class="text-xs text-white/90 font-medium mt-0.5 flex items-center gap-1">
-          <i class="fa-regular fa-clock"></i> ${meal.timing}
-        </div>
+        <h4 class="text-xs font-extrabold text-[var(--text-main)] pt-0.5">${esc(n.title)}</h4>
+        <p class="text-[11px] text-[var(--text-sub)] leading-snug">${esc(n.desc)}</p>
       </div>
-
-      <div class="p-4 flex-1 flex flex-col justify-between space-y-3">
-        <div>
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">Today's Dishes</span>
-          <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-200">
-            ${meal.items.map(item => `
-              <li class="flex items-start gap-2">
-                <i class="fa-solid fa-circle-check text-lpu-500 text-[11px] mt-0.5 shrink-0"></i>
-                <span class="leading-snug">${item}</span>
-              </li>
-            `).join('')}
-          </ul>
-        </div>
-
-        <div class="p-2.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900/40 text-xs">
-          <span class="text-[10px] font-bold uppercase text-lpu-700 dark:text-lpu-400 flex items-center gap-1">
-            <i class="fa-solid fa-sparkles"></i> Chef's Special
-          </span>
-          <p class="text-slate-800 dark:text-orange-200 font-semibold mt-0.5 leading-snug">${meal.special}</p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-1 pt-1">
-          <span class="px-2 py-0.5 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 rounded text-[10px] font-bold">
-            <i class="fa-solid fa-seedling mr-1"></i>Pure Veg
-          </span>
-          <span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[10px] font-semibold">
-            ${meal.calories}
-          </span>
-          ${meal.dietary.map(d => `
-            <span class="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-400 rounded text-[10px]">
-              ${d}
-            </span>
-          `).join('')}
-        </div>
-
-        <div class="pt-2 border-t border-slate-100 dark:border-slate-700/70 flex items-center justify-between text-xs">
-          <div class="flex items-center gap-1 text-amber-500">
-            <i class="fa-solid fa-star"></i>
-            <span class="font-extrabold text-slate-900 dark:text-white" id="rating-val-${ratingKey}">${currentRating.toFixed(1)}</span>
-            <span class="text-[10px] text-slate-400">(${currentVotes})</span>
-          </div>
-
-          <button onclick="voteMeal('${ratingKey}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold ${
-            savedUserVote 
-              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300' 
-              : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
-          } transition flex items-center gap-1">
-            <i class="fa-regular fa-thumbs-up"></i>
-            <span>${savedUserVote ? 'Voted' : 'Rate Dish'}</span>
-          </button>
-        </div>
-
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-function voteMeal(ratingKey) {
-  if (userRatings[ratingKey]) {
-    alert('You have already rated this meal today!');
-    return;
+    `).join('');
   }
 
-  userRatings[ratingKey] = {
-    rating: 5.0,
-    timestamp: Date.now()
-  };
-
-  localStorage.setItem(KEY_RATINGS, JSON.stringify(userRatings));
-  renderMessMenu();
-  alert('Thank you! Your feedback for this mess dish has been logged.');
+  // Profile Screen Card
+  setText('prof-avatar', initials);
+  setText('prof-name', profile.name);
+  setText('prof-reg-sec', `Reg: ${profile.regNo} • Sec: ${profile.section}`);
+  setText('prof-prog', profile.program);
+  setText('prof-hostel', hostelLabel);
+  setText('prof-mentor', profile.mentorName || 'Faculty Mentor');
+  setText('prof-barcode-lbl', `*LPU-${profile.regNo}*`);
 }
 
-// --------------------------------------------------------
-// 11. STUDENT BUZZ & COMMUNITY REVIEWS
-// --------------------------------------------------------
-function renderCommunityReviews() {
-  const container = document.getElementById('community-reviews-feed');
-  if (!container) return;
-
-  container.innerHTML = '';
-
-  communityReviews.forEach(rev => {
-    const card = document.createElement('div');
-    card.className = 'bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2';
-
-    card.innerHTML = `
-      <div class="flex items-start justify-between">
-        <div class="flex items-center gap-2.5">
-          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(rev.author)}" alt="avatar" class="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-700">
-          <div>
-            <div class="flex items-center gap-1.5">
-              <span class="font-bold text-xs text-slate-900 dark:text-white">${rev.author}</span>
-              <span class="px-1.5 py-0.2 rounded text-[9px] font-extrabold bg-lpu-100 text-lpu-800 dark:bg-lpu-950 dark:text-lpu-300">
-                ${rev.hostel}
-              </span>
-            </div>
-            <div class="text-[10px] text-slate-400">Reg: ${rev.regNo} • ${rev.timestamp}</div>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-1 text-amber-400 text-xs font-bold">
-          ${Array(rev.rating).fill('<i class="fa-solid fa-star"></i>').join('')}
-        </div>
-      </div>
-
-      <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-11">
-        ${rev.text}
-      </p>
-
-      <div class="pl-11 pt-1 flex items-center justify-between text-xs text-slate-400">
-        <span class="text-[10px] font-semibold text-slate-500">Meal: ${rev.meal || 'Mess Review'}</span>
-        <button onclick="likeReview('${rev.id}')" class="flex items-center gap-1 hover:text-rose-500 transition">
-          <i class="fa-solid fa-heart text-rose-500"></i>
-          <span>${rev.likes || 0}</span>
-        </button>
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
+// ================= ATTENDANCE TRACKER =================
+function lpuAttBonusMarks(pct) {
+  if (pct >= 90) return '5/5 Bonus Marks';
+  if (pct >= 85) return '4/5 Bonus Marks';
+  if (pct >= 80) return '3/5 Bonus Marks';
+  if (pct >= 75) return '2/5 Bonus Marks';
+  return '0/5 (Shortage)';
 }
 
-function handleQuickPostReview(e) {
-  e.preventDefault();
-  const input = document.getElementById('quick-review-input');
-  const text = input.value.trim();
-  if (!text) return;
+function renderAttendance() {
+  const { att, tot, pct } = computeAggregateAttendance();
+  setText('att-big-pct', pct.toFixed(1) + '%');
 
-  const authorName = currentUser ? currentUser.name : 'Verto Guest';
-  const authorReg = currentUser ? currentUser.regNo : '1220' + Math.floor(1000 + Math.random() * 9000);
-  const authorHostel = currentUser ? currentUser.hostel : 'BH-4';
+  const pill = document.getElementById('att-status-pill');
+  const advice = document.getElementById('att-bunk-advice');
 
-  const newReview = {
-    id: 'rev_' + Date.now(),
-    author: authorName,
-    regNo: authorReg,
-    hostel: authorHostel,
-    meal: 'General',
-    rating: 5,
-    text: text,
-    timestamp: 'Just now',
-    likes: 1
-  };
-
-  communityReviews.unshift(newReview);
-  localStorage.setItem(KEY_COMMUNITY_REVIEWS, JSON.stringify(communityReviews));
-
-  input.value = '';
-  renderCommunityReviews();
-  alert('Your review has been posted to the Verto Community Buzz!');
-}
-
-function likeReview(id) {
-  const rev = communityReviews.find(r => r.id === id);
-  if (rev) {
-    rev.likes = (rev.likes || 0) + 1;
-    localStorage.setItem(KEY_COMMUNITY_REVIEWS, JSON.stringify(communityReviews));
-    renderCommunityReviews();
-  }
-}
-
-// --------------------------------------------------------
-// 12. MESS LEAVE REBATE SYSTEM (UMS)
-// --------------------------------------------------------
-function openRebateModal() {
-  if (!currentUser) {
-    alert('Please log in with your Verto credentials to apply for Mess Leave Rebate.');
-    openAuthModal('signin');
-    return;
-  }
-  document.getElementById('rebate-modal').classList.remove('hidden');
-}
-
-function closeRebateModal() {
-  document.getElementById('rebate-modal').classList.add('hidden');
-}
-
-function handleRebateSubmit(e) {
-  e.preventDefault();
-  const from = document.getElementById('rebate-from').value;
-  const to = document.getElementById('rebate-to').value;
-  const reason = document.getElementById('rebate-reason').value;
-  const pnr = document.getElementById('rebate-pnr').value || 'N/A';
-
-  const start = new Date(from);
-  const end = new Date(to);
-  const diffTime = Math.abs(end - start);
-  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-  if (days < 3) {
-    alert('Mess Rebate is only applicable for leaves of 3 days or more!');
-    return;
-  }
-
-  const rebateAmt = days * 130;
-
-  const newRebate = {
-    id: 'reb_' + Date.now(),
-    studentName: currentUser.name,
-    regNo: currentUser.regNo,
-    hostel: currentUser.hostel,
-    fromDate: from,
-    toDate: to,
-    days: days,
-    reason: reason,
-    pnr: pnr,
-    status: 'Pending Warden Approval',
-    rebateAmount: `₹ ${rebateAmt} Credit`,
-    approvedBy: 'Under Review'
-  };
-
-  rebatesList.unshift(newRebate);
-  localStorage.setItem(KEY_REBATES, JSON.stringify(rebatesList));
-
-  closeRebateModal();
-  renderWardenPanel();
-  alert(`Mess Rebate application submitted!\nTotal Leave: ${days} Days\nEstimated Credit: ₹ ${rebateAmt}\nSent to Chief Warden Office for verification.`);
-}
-
-// --------------------------------------------------------
-// 13. WARDEN PANEL CONTROLS
-// --------------------------------------------------------
-function renderWardenPanel() {
-  const container = document.getElementById('warden-rebates-list');
-  const countEl = document.getElementById('pending-rebate-count');
-  if (!container) return;
-
-  countEl.textContent = `${rebatesList.length} Requests`;
-  container.innerHTML = '';
-
-  if (rebatesList.length === 0) {
-    container.innerHTML = `<div class="p-4 text-xs text-slate-400">No rebate requests pending.</div>`;
-    return;
-  }
-
-  rebatesList.forEach(r => {
-    const card = document.createElement('div');
-    card.className = 'p-3 bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2';
-
-    card.innerHTML = `
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="font-bold text-slate-900 dark:text-white">${r.studentName}</span>
-          <span class="text-[10px] text-slate-400">(${r.regNo} • ${r.hostel})</span>
-          <span class="px-2 py-0.2 rounded text-[10px] font-bold ${r.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">${r.status}</span>
-        </div>
-        <div class="text-slate-500 mt-0.5 text-[11px]">
-          Dates: ${r.fromDate} to ${r.toDate} (${r.days} Days) • Reason: ${r.reason}
-        </div>
-        <div class="text-lpu-600 font-bold mt-0.5 text-[11px]">Refund: ${r.rebateAmount}</div>
-      </div>
-
-      ${r.status !== 'Approved' ? `
-        <div class="flex items-center gap-1.5 shrink-0">
-          <button onclick="approveRebate('${r.id}')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition">
-            Approve
-          </button>
-          <button onclick="rejectRebate('${r.id}')" class="px-2.5 py-1.5 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold rounded-lg text-xs transition">
-            Reject
-          </button>
-        </div>
-      ` : '<span class="text-emerald-500 font-bold text-xs"><i class="fa-solid fa-circle-check"></i> Approved</span>'}
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-function approveRebate(id) {
-  const target = rebatesList.find(r => r.id === id);
-  if (target) {
-    target.status = 'Approved';
-    target.approvedBy = currentUser ? currentUser.name : 'Chief Warden';
-    localStorage.setItem(KEY_REBATES, JSON.stringify(rebatesList));
-    renderWardenPanel();
-    alert(`Rebate for ${target.studentName} approved! ₹ ${target.rebateAmount} credited.`);
-  }
-}
-
-function rejectRebate(id) {
-  const target = rebatesList.find(r => r.id === id);
-  if (target) {
-    target.status = 'Rejected (Documentation Incomplete)';
-    localStorage.setItem(KEY_REBATES, JSON.stringify(rebatesList));
-    renderWardenPanel();
-  }
-}
-
-function handleWardenBroadcast(e) {
-  e.preventDefault();
-  const input = document.getElementById('broadcast-message-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-
-  const announcementEl = document.getElementById('active-meal-announcement');
-  if (announcementEl) {
-    announcementEl.textContent = `[WARDEN NOTICE]: ${msg}`;
-  }
-
-  input.value = '';
-  alert('Announcement broadcasted live to all student headers!');
-}
-
-// --------------------------------------------------------
-// 14. CAMPUS EATERIES & UNIMALL
-// --------------------------------------------------------
-function renderEateries(filterType = 'all') {
-  const container = document.getElementById('eateries-grid');
-  if (!container) return;
-
-  const filtered = filterType === 'all' 
-    ? CAMPUS_EATERIES 
-    : CAMPUS_EATERIES.filter(e => e.type === filterType || e.tags.some(t => t.toLowerCase().includes(filterType)));
-
-  container.innerHTML = '';
-
-  filtered.forEach(item => {
-    const card = document.createElement('div');
-    card.className = 'bg-white dark:bg-slate-800 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shadow-sm hover-card flex flex-col justify-between';
-
-    card.innerHTML = `
-      <div>
-        <div class="h-44 w-full overflow-hidden relative">
-          <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
-          <div class="absolute top-3 right-3 px-2.5 py-1 bg-black/70 backdrop-blur text-white text-xs font-bold rounded-lg flex items-center gap-1">
-            <i class="fa-solid fa-star text-amber-400"></i> ${item.rating}
-          </div>
-          <div class="absolute bottom-3 left-3 px-2 py-0.5 bg-lpu-600 text-white text-[11px] font-bold rounded-md">
-            ${item.priceRange}
-          </div>
-        </div>
-
-        <div class="p-4 space-y-2">
-          <h3 class="font-bold text-base text-slate-900 dark:text-white">${item.name}</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-            <i class="fa-solid fa-location-dot text-rose-500"></i> ${item.location}
-          </p>
-          <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${item.description}</p>
-          
-          <div class="bg-slate-50 dark:bg-slate-900 p-2.5 rounded-xl border border-slate-100 dark:border-slate-700/60 text-xs">
-            <span class="font-bold text-slate-700 dark:text-slate-300 block text-[11px] mb-1">Famous Picks:</span>
-            <span class="text-slate-600 dark:text-slate-400">${item.highlights}</span>
-          </div>
-
-          <div class="flex flex-wrap gap-1 pt-1">
-            ${item.tags.map(t => `<span class="px-2 py-0.5 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded text-[10px] font-medium">${t}</span>`).join('')}
-          </div>
-        </div>
-      </div>
-
-      <div class="p-4 pt-0 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between mt-3 text-xs">
-        <span class="text-slate-500 dark:text-slate-400 font-semibold">
-          <i class="fa-regular fa-clock mr-1"></i> ${item.timing}
-        </span>
-        <button onclick="alert('Contacting ${item.name} at ${item.phone}')" class="px-3 py-1.5 bg-lpu-50 dark:bg-slate-700 text-lpu-700 dark:text-lpu-400 rounded-lg font-bold hover:bg-lpu-100 transition">
-          <i class="fa-solid fa-phone mr-1"></i> Call Outlet
-        </button>
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-function filterEateries(type, btnEl) {
-  const pills = document.querySelectorAll('.eatery-pill');
-  pills.forEach(p => {
-    p.classList.remove('bg-white', 'text-orange-600', 'font-bold');
-    p.classList.add('bg-black/20', 'text-white');
-  });
-
-  const targetBtn = btnEl || (typeof event !== 'undefined' && event ? event.currentTarget : null);
-  if (targetBtn) {
-    targetBtn.classList.remove('bg-black/20', 'text-white');
-    targetBtn.classList.add('bg-white', 'text-orange-600', 'font-bold');
-  }
-
-  renderEateries(type);
-}
-
-// --------------------------------------------------------
-// 15. LIVE MEAL STATUS & STATUS RIBBON
-// --------------------------------------------------------
-function updateLiveMealStatus() {
-  const info = getCurrentMealInfo();
-  const announcementEl = document.getElementById('active-meal-announcement');
-  const countdownEl = document.getElementById('next-meal-countdown');
-  const liveBadge = document.getElementById('live-meal-badge');
-
-  if (announcementEl && !announcementEl.textContent.startsWith('[WARDEN NOTICE]')) {
-    announcementEl.textContent = info.message;
-  }
-
-  if (countdownEl) {
-    if (info.status === 'active') {
-      countdownEl.innerHTML = `<i class="fa-solid fa-stopwatch mr-1"></i> Serving now (closes in ${info.closingIn} mins)`;
-      if (liveBadge) liveBadge.classList.remove('hidden');
-    } else if (info.status === 'upcoming') {
-      const hrs = Math.floor(info.startsIn / 60);
-      const mins = info.startsIn % 60;
-      const timeStr = hrs > 0 ? `${hrs}h ${mins}m` : `${mins} mins`;
-      countdownEl.innerHTML = `<i class="fa-solid fa-hourglass-half mr-1"></i> Next: ${info.name} in ${timeStr}`;
-    } else {
-      countdownEl.innerHTML = `<i class="fa-solid fa-bed mr-1"></i> Night Kitchen Closed`;
+  if (pct >= 75) {
+    if (pill) {
+      pill.textContent = 'Safe (>=75%)';
+      pill.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-600';
     }
-  }
-}
-
-// --------------------------------------------------------
-// 16. FEEDBACK MODAL & STAR RATINGS
-// --------------------------------------------------------
-function openFeedbackModal() {
-  document.getElementById('feedback-modal').classList.remove('hidden');
-}
-
-function closeFeedbackModal() {
-  document.getElementById('feedback-modal').classList.add('hidden');
-}
-
-function setModalStarRating(rating) {
-  document.getElementById('fb-rating').value = rating;
-  const stars = document.querySelectorAll('#star-rating-container i');
-  stars.forEach((s, idx) => {
-    if (idx < rating) {
-      s.classList.remove('fa-regular');
-      s.classList.add('fa-solid');
-    } else {
-      s.classList.remove('fa-solid');
-      s.classList.add('fa-regular');
+    const safeBunks = Math.max(0, Math.floor((att - 0.75 * tot) / 0.75));
+    if (advice) {
+      advice.textContent = `${att}/${tot} attended • You can safely skip ${safeBunks} ${safeBunks === 1 ? 'lecture' : 'lectures'} and stay >=75%.`;
     }
-  });
-}
-
-function handleFeedbackSubmit(e) {
-  e.preventDefault();
-  const hostel = document.getElementById('fb-hostel').value;
-  const rating = parseInt(document.getElementById('fb-rating').value);
-  const comments = document.getElementById('fb-comments').value;
-
-  if (comments.trim()) {
-    const authorName = currentUser ? currentUser.name : 'Verto Guest';
-    const authorReg = currentUser ? currentUser.regNo : '1220' + Math.floor(1000 + Math.random() * 9000);
-
-    const newRev = {
-      id: 'rev_' + Date.now(),
-      author: authorName,
-      regNo: authorReg,
-      hostel: hostel,
-      meal: 'Mess Review',
-      rating: rating,
-      text: comments,
-      timestamp: 'Just now',
-      likes: 1
-    };
-    communityReviews.unshift(newRev);
-    localStorage.setItem(KEY_COMMUNITY_REVIEWS, JSON.stringify(communityReviews));
-    renderCommunityReviews();
-  }
-
-  alert(`Thank you for submitting your mess review for ${hostel}!\nRating: ${rating}/5 stars\nYour input has been posted to Student Buzz & logged with the Food Committee.`);
-  closeFeedbackModal();
-  e.target.reset();
-}
-
-// --------------------------------------------------------
-// 17. PWA SERVICE WORKER & PHONE APP INSTALLATION
-// --------------------------------------------------------
-let deferredPrompt = null;
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').then((reg) => {
-      console.log('CampusGrid Service Worker registered with scope:', reg.scope);
-    }).catch((err) => {
-      console.warn('Service Worker registration skipped:', err);
-    });
-  });
-}
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  const btn = document.getElementById('pwa-install-btn');
-  if (btn) btn.classList.remove('hidden');
-});
-
-function triggerPwaInstall() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then((choiceResult) => {
-      if (choiceResult.outcome === 'accepted') {
-        alert('CampusGrid has been added to your Phone Home Screen!');
-      }
-      deferredPrompt = null;
-    });
   } else {
-    alert('📱 How to Install on your Phone:\n\n1. Open this website in your phone browser (Chrome on Android or Safari on iPhone).\n2. Tap the Menu (3 dots) on Chrome or the Share button on Safari.\n3. Tap "Add to Home screen" or "Install App".\n4. CampusGrid will install on your phone with a real app icon and run full-screen!');
-  }
-}
-
-
-// --------------------------------------------------------
-// 18. LPU A-Z SUPER HUB & INTERACTIVE VERTO CALCULATORS
-// --------------------------------------------------------
-function renderLpuHub() {
-  if (typeof LPU_ENCYCLOPEDIA === 'undefined') return;
-
-  // 1. Mega Stats
-  const statsGrid = document.getElementById('lpu-stats-grid');
-  if (statsGrid) {
-    statsGrid.innerHTML = LPU_ENCYCLOPEDIA.stats.map(s => `
-      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-1 hover-card">
-        <div class="flex items-center justify-between">
-          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${s.label}</span>
-          <i class="fa-solid ${s.icon} ${s.color} text-sm"></i>
-        </div>
-        <div class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">${s.value}</div>
-        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">${s.sub}</p>
-      </div>
-    `).join('');
+    if (pill) {
+      pill.textContent = 'Below 75%';
+      pill.className = 'px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-600';
+    }
+    const need = Math.max(1, Math.ceil((0.75 * tot - att) / 0.25));
+    if (advice) {
+      advice.textContent = `${att}/${tot} attended • Attend next ${need} classes continuously to reach 75%.`;
+    }
   }
 
-  // 2. Blocks 1 to 57 Directory
-  filterLpuBlocks('');
+  const box = document.getElementById('subjects-container');
+  if (!box) return;
 
-  // 3. Digital Portals
-  const portalsGrid = document.getElementById('lpu-portals-grid');
-  if (portalsGrid) {
-    portalsGrid.innerHTML = LPU_ENCYCLOPEDIA.digitalPortals.map(p => `
-      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2 hover-card">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-sm shrink-0">
-              <i class="fa-solid ${p.icon}"></i>
+  box.innerHTML = subjects.map((s) => {
+    const spct = s.total > 0 ? (s.attended / s.total) * 100 : 100;
+    const isSafe = spct >= 75;
+    const barColor = isSafe ? '#10b981' : '#ef4444';
+    const subHint = isSafe
+      ? `Safe to miss: ${Math.max(0, Math.floor((s.attended - 0.75 * s.total) / 0.75))}`
+      : `Need +${Math.max(1, Math.ceil((0.75 * s.total - s.attended) / 0.25))} classes`;
+
+    return `
+      <div class="app-card p-3.5 space-y-2.5">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(s.code)}</span>
+              <span class="text-[11px] font-semibold text-[var(--text-sub)]">${esc(lpuAttBonusMarks(spct))}</span>
             </div>
-            <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">${p.name}</h4>
+            <h4 class="text-[13px] font-extrabold text-[var(--text-main)] mt-1 leading-snug">${esc(s.name)}</h4>
+            <p class="text-[11px] text-[var(--text-sub)] mt-0.5">Room ${esc(s.room || '-')} • ${esc(s.faculty || 'Faculty')}</p>
           </div>
-          <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900 text-[10px] font-mono font-bold text-lpu-500 shrink-0">${p.tag}</span>
-        </div>
-        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${p.desc}</p>
-      </div>
-    `).join('');
-  }
 
-  // 4. Fests & Culture
-  const festsList = document.getElementById('lpu-fests-list');
-  if (festsList) {
-    festsList.innerHTML = LPU_ENCYCLOPEDIA.festsAndCulture.map(f => `
-      <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 space-y-1">
-        <div class="flex items-center justify-between gap-2">
-          <span class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
-            <i class="fa-solid ${f.icon} text-lpu-500"></i> ${f.title}
-          </span>
-          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400">${f.badge}</span>
+          <div class="text-right shrink-0">
+            <span class="text-base font-extrabold ${isSafe ? 'text-emerald-600' : 'text-rose-500'}">${spct.toFixed(1)}%</span>
+            <span class="block text-[11px] font-bold text-[var(--text-sub)]">${s.attended}/${s.total}</span>
+          </div>
         </div>
-        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">${f.desc}</p>
-      </div>
-    `).join('');
-  }
 
-  // 5. Transit, Rules & Placements
-  const transitList = document.getElementById('lpu-transit-list');
-  if (transitList) {
-    transitList.innerHTML = LPU_ENCYCLOPEDIA.transitAndRules.map(t => `
-      <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 flex items-start gap-3">
-        <i class="fa-solid fa-circle-check text-emerald-400 text-xs mt-1 shrink-0"></i>
-        <div class="text-xs">
-          <span class="font-bold text-slate-900 dark:text-white block">${t.title}</span>
-          <span class="text-slate-600 dark:text-slate-400 leading-snug">${t.detail}</span>
+        <div class="w-full h-2 rounded-full bg-[var(--surface-muted)] overflow-hidden">
+          <div class="h-full rounded-full transition-all duration-300" style="width: ${Math.min(100, spct).toFixed(1)}%; background: ${barColor};"></div>
+        </div>
+
+        <div class="flex items-center justify-between pt-0.5 gap-2">
+          <span class="text-[11px] font-semibold text-[var(--text-sub)]">${subHint}</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="markAttendance('${s.id}', true)" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-700 font-bold text-xs border-0 cursor-pointer tap-scale">
+              + Present
+            </button>
+            <button onclick="markAttendance('${s.id}', false)" class="px-2.5 py-1.5 rounded-lg bg-rose-500/15 text-rose-600 font-bold text-xs border-0 cursor-pointer tap-scale">
+              + Absent
+            </button>
+            <button onclick="deleteSubject('${s.id}')" class="w-7 h-7 rounded-lg btn-neutral text-[11px] text-[var(--text-sub)] tap-scale" title="Remove">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
         </div>
       </div>
-    `).join('');
-  }
+    `;
+  }).join('');
 }
 
-function filterLpuBlocks(query) {
-  if (typeof LPU_ENCYCLOPEDIA === 'undefined') return;
-  const grid = document.getElementById('lpu-blocks-grid');
-  if (!grid) return;
+function markAttendance(subId, isPresent) {
+  const sub = subjects.find((x) => x.id === subId);
+  if (!sub) return;
+  sub.total = Number(sub.total || 0) + 1;
+  if (isPresent) sub.attended = Number(sub.attended || 0) + 1;
+  localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  renderAttendance();
+  renderProfileAndHome();
+  showToast(`${sub.code}: Marked ${isPresent ? 'Present' : 'Absent'}`);
+}
 
-  const q = (query || '').toLowerCase().trim();
-  const items = !q
-    ? LPU_ENCYCLOPEDIA.blocksGuide
-    : LPU_ENCYCLOPEDIA.blocksGuide.filter(b =>
-        b.blocks.toLowerCase().includes(q) ||
-        b.school.toLowerCase().includes(q) ||
-        b.highlights.toLowerCase().includes(q)
-      );
+function addNewSubject() {
+  const code = val('inp-sub-code').toUpperCase() || 'CSE101';
+  const name = val('inp-sub-name');
+  if (!name) return showToast('Enter subject name');
+  const room = val('inp-sub-room') || '32-101';
+  const fac = val('inp-sub-fac') || 'LPU Faculty';
+  const att = Math.max(0, parseInt(val('inp-sub-att') || '0', 10));
+  const tot = Math.max(att, parseInt(val('inp-sub-tot') || '1', 10));
 
-  if (items.length === 0) {
-    grid.innerHTML = `<div class="col-span-full p-4 text-center text-xs text-slate-400">No matching LPU block or school found.</div>`;
+  subjects.unshift({
+    id: 's_' + Date.now(),
+    code,
+    name,
+    faculty: fac,
+    room,
+    attended: att,
+    total: tot
+  });
+  localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  closeSheet('sheet-add-subject');
+  renderAttendance();
+  renderProfileAndHome();
+  showToast('Subject added');
+}
+
+function deleteSubject(subId) {
+  subjects = subjects.filter((x) => x.id !== subId);
+  localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  renderAttendance();
+  renderProfileAndHome();
+  showToast('Subject removed');
+}
+
+// ================= TIMETABLE =================
+function renderTimetable() {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const pillBox = document.getElementById('tt-day-pills');
+  if (pillBox) {
+    pillBox.innerHTML = days.map((d) => `
+      <button onclick="selectTimetableDay('${d}')" class="filter-chip ${selectedTtDay === d ? 'active' : ''}">
+        ${d.slice(0, 3)}
+      </button>
+    `).join('');
+  }
+
+  const list = timetable[selectedTtDay] || [];
+  const box = document.getElementById('tt-list-container');
+  if (!box) return;
+
+  if (list.length === 0) {
+    box.innerHTML = `<div class="app-card p-6 text-center text-xs text-[var(--text-sub)]">No classes on ${selectedTtDay}. Tap <strong>+ Class</strong> to add one.</div>`;
     return;
   }
 
-  grid.innerHTML = items.map(b => `
-    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 space-y-1.5">
-      <div class="flex items-center justify-between">
-        <span class="px-2.5 py-0.5 rounded-lg bg-lpu-500/20 text-lpu-400 border border-lpu-500/30 text-xs font-extrabold">${b.blocks}</span>
-        <i class="fa-solid fa-location-dot text-slate-500 text-xs"></i>
+  box.innerHTML = list.map((c) => `
+    <div class="app-card p-3.5 flex items-center justify-between gap-3">
+      <div class="min-w-0 space-y-1">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(c.code)}</span>
+          <span class="text-[11px] font-bold text-[var(--text-sub)]">${esc(c.time)}</span>
+          <span class="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--text-sub)] font-semibold">${esc(c.type)}</span>
+        </div>
+        <h4 class="text-[13px] font-extrabold text-[var(--text-main)] truncate">${esc(c.title)}</h4>
+        <div class="flex items-center gap-3 text-[11px]">
+          <span class="font-bold text-[var(--text-sub)]"><i class="fa-solid fa-door-open mr-1"></i>Room ${esc(c.room)}</span>
+          <a href="${roomToMapsUrl(c.room)}" target="_blank" rel="noopener" class="font-bold text-[var(--accent)] no-underline">
+            Block Map Link <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+          </a>
+        </div>
       </div>
-      <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-snug">${b.school}</h4>
-      <p class="text-[11px] text-slate-500 dark:text-slate-400">${b.highlights}</p>
+      <button onclick="deleteClassSlot('${selectedTtDay}', '${c.id}')" class="w-8 h-8 rounded-xl btn-neutral text-xs text-[var(--text-sub)] shrink-0 tap-scale">
+        <i class="fa-solid fa-trash-can"></i>
+      </button>
     </div>
   `).join('');
 }
 
-function calculateLpuAttendance() {
-  const attEl = document.getElementById('att-attended');
-  const totEl = document.getElementById('att-total');
-  if (!attEl || !totEl) return;
+function selectTimetableDay(day) {
+  selectedTtDay = day;
+  renderTimetable();
+}
 
-  let attended = Math.max(0, parseInt(attEl.value) || 0);
-  let total = Math.max(1, parseInt(totEl.value) || 1);
-  if (attended > total) attended = total;
+function addNewClassSlot() {
+  const day = val('inp-tt-day') || 'Monday';
+  const type = val('inp-tt-type') || 'Lecture';
+  const time = val('inp-tt-time') || '09:00 AM - 10:00 AM';
+  const code = (val('inp-tt-code') || 'CSE101').toUpperCase();
+  const room = val('inp-tt-room') || '32-201';
+  const title = val('inp-tt-title');
+  if (!title) return showToast('Enter subject title');
 
-  const pct = (attended / total) * 100;
-  let attMarks = 0;
-  if (pct >= 90) attMarks = 5;
-  else if (pct >= 85) attMarks = 4;
-  else if (pct >= 80) attMarks = 3;
-  else if (pct >= 75) attMarks = 2;
+  if (!timetable[day]) timetable[day] = [];
+  timetable[day].push({ id: 'tt_' + Date.now(), time, code, title, room, type });
+  localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable));
+  selectedTtDay = day;
+  closeSheet('sheet-add-class');
+  renderTimetable();
+  renderProfileAndHome();
+  showToast(`Added to ${day}`);
+}
 
-  const pctText = document.getElementById('att-percent-text');
-  const bar = document.getElementById('att-progress-bar');
-  const advice = document.getElementById('att-advice-text');
-  const pill = document.getElementById('att-marks-pill');
+function deleteClassSlot(day, id) {
+  if (!timetable[day]) return;
+  timetable[day] = timetable[day].filter((x) => x.id !== id);
+  localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable));
+  renderTimetable();
+  renderProfileAndHome();
+  showToast('Class removed');
+}
 
-  if (pctText) {
-    pctText.textContent = `${pct.toFixed(1)}%`;
-    pctText.className = `text-2xl font-black ${pct >= 75 ? 'text-emerald-400' : 'text-rose-500'}`;
+// ================= EXAMS & MARKS PREDICTOR =================
+function renderExams() {
+  const box = document.getElementById('exams-list-container');
+  if (!box) return;
+  if (exams.length === 0) {
+    box.innerHTML = `<div class="app-card-muted p-4 text-center text-xs text-[var(--text-sub)]">No upcoming exams added.</div>`;
+    return;
   }
-  if (bar) {
-    bar.style.width = `${Math.min(100, pct).toFixed(1)}%`;
-    bar.className = `h-2.5 rounded-full transition-all duration-300 ${pct >= 75 ? 'bg-gradient-to-r from-cyan-500 to-emerald-500' : 'bg-gradient-to-r from-rose-600 to-amber-500'}`;
-  }
-  if (pill) {
-    pill.textContent = `${attMarks} / 5 Att. Marks`;
+
+  box.innerHTML = exams.map((ex) => `
+    <div class="app-card-muted p-3 space-y-1.5">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-1.5">
+          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(ex.code)}</span>
+          <span class="text-[11px] font-bold text-[var(--text-sub)]">${esc(ex.examType)}</span>
+        </div>
+        <button onclick="deleteExam('${ex.id}')" class="text-[11px] text-[var(--text-faint)] bg-transparent border-0 cursor-pointer"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(ex.subject)}</h4>
+      <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-sub)] pt-0.5">
+        <span><i class="fa-regular fa-calendar mr-1"></i>${esc(ex.date)} • ${esc(ex.time)}</span>
+        <a href="${roomToMapsUrl(ex.room)}" target="_blank" rel="noopener" class="font-bold text-[var(--accent)] no-underline">
+          Room ${esc(ex.room)} (${esc(ex.seat)}) ↗
+        </a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addNewExam() {
+  const code = (val('inp-ex-code') || 'CSE101').toUpperCase();
+  const examType = val('inp-ex-type') || 'End-Term (ETE)';
+  const subject = val('inp-ex-sub');
+  if (!subject) return showToast('Enter subject name');
+  const date = val('inp-ex-date') || '2026-11-25';
+  const time = val('inp-ex-time') || '09:30 AM - 12:30 PM';
+  const room = val('inp-ex-room') || '32-304';
+  const seat = val('inp-ex-seat') || 'Row 2 • Seat 10';
+
+  exams.push({ id: 'ex_' + Date.now(), code, subject, examType, date, time, room, seat });
+  localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(exams));
+  closeSheet('sheet-add-exam');
+  renderExams();
+  showToast('Exam added');
+}
+
+function deleteExam(id) {
+  exams = exams.filter((x) => x.id !== id);
+  localStorage.setItem(STORAGE_KEYS.EXAMS, JSON.stringify(exams));
+  renderExams();
+}
+
+function calcLpuGrade() {
+  const a = parseInt(document.getElementById('rng-m-att')?.value || '4', 10);
+  const c = parseInt(document.getElementById('rng-m-ca')?.value || '21', 10);
+  const m = parseInt(document.getElementById('rng-m-mte')?.value || '16', 10);
+  const e = parseInt(document.getElementById('rng-m-ete')?.value || '38', 10);
+
+  setText('lbl-m-att', `${a} / 5`);
+  setText('lbl-m-ca', `${c} / 25`);
+  setText('lbl-m-mte', `${m} / 20`);
+  setText('lbl-m-ete', `${e} / 50`);
+
+  const total = a + c + m + e;
+  setText('grade-total-score', `${total} / 100`);
+
+  let grade = 'E (Reappear)';
+  if (total >= 90) grade = 'O (10 GP)';
+  else if (total >= 80) grade = 'A+ (9 GP)';
+  else if (total >= 70) grade = 'A (8 GP)';
+  else if (total >= 60) grade = 'B+ (7 GP)';
+  else if (total >= 50) grade = 'B (6 GP)';
+  else if (total >= 45) grade = 'C (5 GP)';
+  else if (total >= 40) grade = 'P (4 GP)';
+
+  setText('grade-letter-out', grade);
+}
+
+// ================= MESS MENU, QR, CAFES & REBATE =================
+function renderMessMenu() {
+  if (typeof MESS_SCHEDULE === 'undefined') return;
+  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  const pillBox = document.getElementById('mess-day-pills');
+  if (pillBox) {
+    pillBox.innerHTML = days.map((d) => `
+      <button onclick="selectMessDay('${d}')" class="filter-chip ${selectedMessDay === d ? 'active' : ''}">
+        ${d.charAt(0).toUpperCase() + d.slice(1, 3)}
+      </button>
+    `).join('');
   }
 
-  if (advice) {
-    if (pct >= 75) {
-      const canSkip = Math.floor((attended - 0.75 * total) / 0.75);
-      advice.innerHTML = canSkip > 0
-        ? `✅ <span class="text-emerald-400">Safe for End-Term Exams!</span> You can safely miss up to <strong>${canSkip} lecture${canSkip > 1 ? 's' : ''}</strong> and still stay above 75%.`
-        : `✅ <span class="text-amber-400">Right on the 75% boundary!</span> Do not miss the next lecture to avoid shortage.`;
-    } else {
-      const needAttend = Math.ceil((0.75 * total - attended) / 0.25);
-      advice.innerHTML = `⚠️ <span class="text-rose-400">Shortage Alert (&lt;75%)!</span> Attend the next <strong>${needAttend} consecutive lecture${needAttend > 1 ? 's' : ''}</strong> (or claim approved DSW Duty Leave) to reach 75%.`;
-    }
+  const dayData = MESS_SCHEDULE[selectedMessDay] || MESS_SCHEDULE.monday;
+  const mealOrder = [
+    { key: 'breakfast', label: 'Breakfast', icon: 'fa-mug-saucer' },
+    { key: 'lunch', label: 'Lunch', icon: 'fa-bowl-rice' },
+    { key: 'snacks', label: 'Evening Snacks', icon: 'fa-cookie-bite' },
+    { key: 'dinner', label: 'Dinner', icon: 'fa-utensils' }
+  ];
+
+  const activeInfo = typeof getCurrentMealInfo === 'function' ? getCurrentMealInfo() : { meal: '', status: '' };
+  const box = document.getElementById('mess-meals-list');
+  if (!box) return;
+
+  box.innerHTML = mealOrder.map((m) => {
+    const meal = dayData.meals[m.key];
+    if (!meal) return '';
+    const isNow = activeInfo.status === 'active' && activeInfo.meal === m.key;
+
+    return `
+      <div class="app-card p-4 space-y-2.5" style="${isNow ? 'border-color: var(--accent);' : ''}">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-xl flex items-center justify-center text-xs" style="background: var(--accent-soft); color: var(--accent);">
+              <i class="fa-solid ${m.icon}"></i>
+            </span>
+            <div>
+              <div class="flex items-center gap-1.5">
+                <h4 class="text-xs font-extrabold text-[var(--text-main)]">${m.label}</h4>
+                ${isNow ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 text-[9px] font-extrabold uppercase">Live</span>` : ''}
+              </div>
+              <span class="text-[11px] text-[var(--text-sub)]">${esc(meal.timing)}</span>
+            </div>
+          </div>
+          <span class="text-[11px] font-bold text-[var(--text-sub)]">${esc(meal.calories)}</span>
+        </div>
+
+        <p class="text-xs font-bold text-[var(--text-main)]">${esc(meal.title)}</p>
+        <ul class="space-y-1 text-xs text-[var(--text-sub)] pl-4 list-disc">
+          ${meal.items.map((it) => `<li>${esc(it)}</li>`).join('')}
+        </ul>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectMessDay(dayKey) {
+  selectedMessDay = dayKey;
+  renderMessMenu();
+}
+
+function renderMessQr() {
+  setText('qr-student-name', profile.name);
+  setText('qr-student-meta', `Reg: ${profile.regNo} • ${profile.hostel} Mess`);
+  setText('qr-token-code', `LPU-MESS-${profile.regNo}`);
+  setText('qr-scan-count', String(messScans));
+  if (typeof getCurrentMealInfo === 'function') {
+    const info = getCurrentMealInfo();
+    setText('qr-meal-slot-label', `${info.name} Coupon (${info.status === 'active' ? 'Active' : 'Upcoming'})`);
   }
 }
 
-function calculateLpuMarks() {
-  const att = Math.min(5, Math.max(0, parseFloat(document.getElementById('mk-att')?.value) || 0));
-  const ca = Math.min(25, Math.max(0, parseFloat(document.getElementById('mk-ca')?.value) || 0));
-  const mte = Math.min(20, Math.max(0, parseFloat(document.getElementById('mk-mte')?.value) || 0));
-  const ete = Math.min(50, Math.max(0, parseFloat(document.getElementById('mk-ete')?.value) || 0));
+function updateQrClock() {
+  const el = document.getElementById('qr-live-timestamp');
+  if (!el) return;
+  const now = new Date();
+  el.textContent = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) +
+    ' • ' + now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
 
-  const total = Math.round((att + ca + mte + ete) * 10) / 10;
-  let grade = 'E (Reappear)';
-  let gp = 0;
+function recordMessScan() {
+  messScans += 1;
+  localStorage.setItem(STORAGE_KEYS.SCANS, String(messScans));
+  renderMessQr();
+  showToast('Meal QR Verified!');
+}
 
-  if (ete < 15 || total < 40) {
-    grade = 'E (Reappear)';
-    gp = 0;
-  } else if (total >= 90) {
-    grade = 'O (Outstanding)';
-    gp = 10;
-  } else if (total >= 80) {
-    grade = 'A+';
-    gp = 9;
-  } else if (total >= 70) {
-    grade = 'A';
-    gp = 8;
-  } else if (total >= 60) {
-    grade = 'B+';
-    gp = 7;
-  } else if (total >= 50) {
-    grade = 'B';
-    gp = 6;
-  } else if (total >= 45) {
-    grade = 'C';
-    gp = 5;
+function renderCafes() {
+  const box = document.getElementById('cafes-list-container');
+  if (!box || typeof CAMPUS_EATERIES === 'undefined') return;
+
+  box.innerHTML = CAMPUS_EATERIES.map((c) => `
+    <div class="app-card p-3.5 space-y-2">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h4 class="text-[13px] font-extrabold text-[var(--text-main)]">${esc(c.name)}</h4>
+          <p class="text-[11px] font-semibold text-[var(--text-sub)]">${esc(c.location)} • ${esc(c.priceRange)}</p>
+        </div>
+        <span class="px-2 py-0.5 rounded-lg bg-amber-500/15 text-amber-600 text-[11px] font-extrabold shrink-0">
+          ★ ${c.rating}
+        </span>
+      </div>
+      <p class="text-xs text-[var(--text-sub)]"><strong class="text-[var(--text-main)]">Must Try:</strong> ${esc(c.mustTry)}</p>
+      <div class="flex items-center justify-between pt-1 text-[11px]">
+        <span class="text-[var(--text-sub)]"><i class="fa-regular fa-clock mr-1"></i>${esc(c.openHours)}</span>
+        <a href="${buildGoogleMapsUrl(c.name + ' ' + c.location)}" target="_blank" rel="noopener" class="font-bold text-[var(--accent)] no-underline">
+          Open Map Link ↗
+        </a>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRebates() {
+  const box = document.getElementById('rebates-history-list');
+  if (!box) return;
+  box.innerHTML = rebates.map((r) => `
+    <div class="app-card p-3.5 flex items-center justify-between gap-2">
+      <div>
+        <span class="text-xs font-extrabold text-[var(--text-main)] block">${esc(r.fromDate)} &rarr; ${esc(r.toDate)} (${r.days} days)</span>
+        <span class="text-[11px] text-[var(--text-sub)]">${esc(r.reason)}</span>
+      </div>
+      <div class="text-right shrink-0">
+        <span class="text-xs font-extrabold text-emerald-600 block">${esc(r.rebateAmount)}</span>
+        <span class="text-[10px] font-bold text-[var(--text-sub)]">${esc(r.status)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function submitMessRebate() {
+  const f = val('reb-from');
+  const t = val('reb-to');
+  const reason = val('reb-reason') || 'Home Visit Leave';
+  if (!f || !t) return showToast('Select From and To dates');
+
+  const days = Math.round((new Date(t) - new Date(f)) / 86400000) + 1;
+  if (days < 3) return showToast('Minimum 3 days required for rebate');
+
+  rebates.unshift({
+    id: 'reb_' + Date.now(),
+    fromDate: f,
+    toDate: t,
+    days,
+    reason,
+    status: 'Submitted',
+    rebateAmount: `₹ ${days * 130} Est.`
+  });
+  localStorage.setItem(STORAGE_KEYS.REBATES, JSON.stringify(rebates));
+  renderRebates();
+  showToast('Mess rebate submitted');
+}
+
+// ================= CAMPUS DIRECTORY (OFFICIAL MAP LINKS ONLY — NO EMBEDDED MAP) =================
+function setCampusCat(cat) {
+  selectedCampusCat = cat;
+  document.querySelectorAll('#campus-cat-pills .filter-chip').forEach((btn) => {
+    btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
+  });
+  renderCampusDirectory();
+}
+
+function renderCampusDirectory() {
+  const box = document.getElementById('campus-blocks-list');
+  if (!box || typeof CAMPUS_LOCATIONS === 'undefined') return;
+
+  const q = (document.getElementById('campus-search-input')?.value || '').trim().toLowerCase();
+  const filtered = CAMPUS_LOCATIONS.filter((loc) => {
+    const catOk = selectedCampusCat === 'all' || loc.category === selectedCampusCat;
+    if (!catOk) return false;
+    if (!q) return true;
+    const hay = `${loc.name} ${loc.shortName || ''} ${loc.dept || ''} ${loc.description || ''}`.toLowerCase();
+    return hay.includes(q);
+  });
+
+  if (filtered.length === 0) {
+    box.innerHTML = `<div class="app-card p-5 text-center text-xs text-[var(--text-sub)]">No matching LPU block or hostel found.</div>`;
+    return;
+  }
+
+  box.innerHTML = filtered.map((loc) => {
+    const mapsHref = loc.coords ? buildGoogleMapsUrl(loc.coords) : buildGoogleMapsUrl(loc.name);
+    return `
+      <div class="app-card p-3.5 space-y-2">
+        <div class="flex items-start justify-between gap-2.5">
+          <div class="min-w-0">
+            <h4 class="text-[13px] font-extrabold text-[var(--text-main)] leading-snug">${esc(loc.shortName || loc.name)}</h4>
+            <p class="text-[11px] font-semibold text-[var(--text-sub)] mt-0.5">${esc(loc.dept || loc.category)}</p>
+          </div>
+          <a href="${mapsHref}" target="_blank" rel="noopener" class="px-2.5 py-1.5 btn-soft text-[11px] no-underline shrink-0 tap-scale">
+            Map Link ↗
+          </a>
+        </div>
+        <p class="text-xs text-[var(--text-sub)] leading-relaxed">${esc(loc.description)}</p>
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-0.5 text-[11px] text-[var(--text-sub)]">
+          <span><i class="fa-regular fa-clock mr-1"></i>${esc(loc.timings || 'Open Daily')}</span>
+          <span><i class="fa-solid fa-bolt mr-1 text-[var(--accent)]"></i>${esc(loc.transit || 'Campus Shuttle')}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCabinsList() {
+  const box = document.getElementById('cabins-list-container');
+  if (!box) return;
+  const q = (document.getElementById('cabin-search-input')?.value || '').trim().toLowerCase();
+  const list = FACULTY_CABINS.filter((f) => !q || `${f.name} ${f.dept} ${f.cabin}`.toLowerCase().includes(q));
+
+  box.innerHTML = list.map((f) => `
+    <div class="app-card p-3.5 space-y-1.5">
+      <div class="flex items-start justify-between gap-2">
+        <div>
+          <h4 class="text-[13px] font-extrabold text-[var(--text-main)]">${esc(f.name)}</h4>
+          <p class="text-[11px] text-[var(--text-sub)]">${esc(f.dept)}</p>
+        </div>
+        <a href="mailto:${esc(f.email)}" class="px-2.5 py-1 rounded-lg btn-neutral text-[11px] no-underline shrink-0">Email</a>
+      </div>
+      <div class="app-card-muted p-2.5 text-xs font-bold text-[var(--text-main)]">
+        <i class="fa-solid fa-location-dot text-[var(--accent)] mr-1.5"></i>${esc(f.cabin)}
+      </div>
+      <p class="text-[11px] text-[var(--text-sub)]"><i class="fa-regular fa-clock mr-1"></i>Visiting: ${esc(f.hours)}</p>
+    </div>
+  `).join('');
+}
+
+function renderRmsList() {
+  const box = document.getElementById('rms-tickets-list');
+  if (!box) return;
+  box.innerHTML = rmsTickets.map((t) => `
+    <div class="app-card p-3.5 space-y-1">
+      <div class="flex items-center justify-between">
+        <span class="text-[11px] font-mono font-extrabold text-[var(--accent)]">${esc(t.id)}</span>
+        <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 text-[10px] font-bold">${esc(t.status)}</span>
+      </div>
+      <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(t.category)} • ${esc(t.location)}</h4>
+      <p class="text-xs text-[var(--text-sub)]">${esc(t.issue)}</p>
+    </div>
+  `).join('');
+}
+
+function submitRmsTicket() {
+  const category = val('rms-cat');
+  const location = val('rms-loc') || `${profile.hostel} ${profile.room}`;
+  const issue = val('rms-desc');
+  if (!issue) return showToast('Describe your issue first');
+
+  rmsTickets.unshift({
+    id: 'RMS-' + Math.floor(10000 + Math.random() * 89999),
+    category,
+    location,
+    issue,
+    date: 'Just now',
+    status: 'Logged'
+  });
+  localStorage.setItem(STORAGE_KEYS.RMS, JSON.stringify(rmsTickets));
+  document.getElementById('rms-desc').value = '';
+  renderRmsList();
+  showToast('RMS Ticket Registered');
+}
+
+function renderRulesList() {
+  const box = document.getElementById('lpu-rules-list');
+  if (!box || typeof LPU_ENCYCLOPEDIA === 'undefined') return;
+  box.innerHTML = LPU_ENCYCLOPEDIA.transitAndRules.map((r) => `
+    <div class="app-card-muted p-3 space-y-0.5">
+      <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(r.title)}</h4>
+      <p class="text-[11px] text-[var(--text-sub)] leading-relaxed">${esc(r.detail)}</p>
+    </div>
+  `).join('');
+}
+
+// ================= PROFILE EDIT & GATE PASSES =================
+function openSheet(id) {
+  if (id === 'sheet-profile') {
+    setVal('inp-p-name', profile.name);
+    setVal('inp-p-reg', profile.regNo);
+    setVal('inp-p-sec', profile.section);
+    setVal('inp-p-prog', profile.program);
+    setVal('inp-p-hostel', profile.hostel);
+    setVal('inp-p-room', profile.room);
+    setVal('inp-p-cgpa', profile.cgpa);
+    setVal('inp-p-mentor', profile.mentorName);
+  }
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
+}
+
+function closeSheet(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('hidden');
+}
+
+function backdropClose(e, id) {
+  if (e.target && e.target.id === id) closeSheet(id);
+}
+
+function saveStudentProfile() {
+  profile.name = val('inp-p-name') || 'Verto Student';
+  profile.regNo = val('inp-p-reg') || '12408912';
+  profile.section = (val('inp-p-sec') || 'K24AI').toUpperCase();
+  profile.program = val('inp-p-prog') || 'B.Tech CSE';
+  profile.hostel = val('inp-p-hostel') || 'BH-4';
+  profile.room = val('inp-p-room') || 'B-412';
+  profile.cgpa = val('inp-p-cgpa') || '8.50';
+  profile.mentorName = val('inp-p-mentor') || 'Faculty Mentor';
+
+  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+  closeSheet('sheet-profile');
+  renderProfileAndHome();
+  renderMessQr();
+  showToast('Student profile updated');
+}
+
+function renderGatePasses() {
+  const box = document.getElementById('gatepasses-list');
+  if (!box) return;
+  box.innerHTML = gatePasses.map((gp) => `
+    <div class="app-card-muted p-3 space-y-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-extrabold text-[var(--text-main)]">${esc(gp.type)}</span>
+        <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 text-[10px] font-bold">${esc(gp.status)}</span>
+      </div>
+      <p class="text-xs text-[var(--text-sub)]"><strong class="text-[var(--text-main)]">To:</strong> ${esc(gp.destination)} (${esc(gp.outTime)} &rarr; ${esc(gp.inTime)})</p>
+      <div class="bg-white border border-slate-200 rounded-lg p-2 text-center">
+        <div class="barcode-bars w-full" style="height: 24px;"></div>
+        <span class="block text-[10px] font-mono font-bold text-slate-600 mt-0.5">${esc(gp.id)}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function createGatePass() {
+  const type = val('inp-gp-type') || 'Day Out-Pass';
+  const destination = val('inp-gp-dest');
+  if (!destination) return showToast('Enter destination');
+  const outTime = val('inp-gp-out') || 'Today 05:00 PM';
+  const inTime = val('inp-gp-in') || 'Today 08:00 PM';
+  const reason = val('inp-gp-reason') || 'Personal Visit';
+
+  gatePasses.unshift({
+    id: 'GP-2026-' + Math.floor(1000 + Math.random() * 8999),
+    type,
+    destination,
+    outTime,
+    inTime,
+    reason,
+    status: 'Approved'
+  });
+  localStorage.setItem(STORAGE_KEYS.GATEPASSES, JSON.stringify(gatePasses));
+  closeSheet('sheet-gatepass');
+  renderGatePasses();
+  showToast('Gate Pass Generated');
+}
+
+// ================= INSTALL, SHARE & RESET =================
+function triggerAppInstall() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(() => {
+      deferredInstallPrompt = null;
+    });
   } else {
-    grade = 'P (Pass)';
-    gp = 4;
+    openSheet('sheet-install');
   }
+}
 
-  const totEl = document.getElementById('mk-total-text');
-  const pillEl = document.getElementById('grade-badge-pill');
-  const verdEl = document.getElementById('mk-verdict-text');
-
-  if (totEl) totEl.textContent = `${total} / 100`;
-  if (pillEl) pillEl.textContent = `${grade} • ${gp} GP`;
-  if (verdEl) {
-    if (gp === 0) {
-      verdEl.innerHTML = `⚠️ <span class="text-rose-400">Below Passing Threshold:</span> Ensure at least 30% in ETE (15/50) and 40/100 overall to clear the course.`;
-    } else {
-      verdEl.innerHTML = `🎯 <span class="text-emerald-400">Course Cleared!</span> Estimated Grade: <strong>${grade} (${gp} Grade Points)</strong> toward your Semester TGPA.`;
-    }
+function shareCampusGridApp() {
+  const shareUrl = 'https://iamaryaann.github.io/lpu-campusgrid/?v=4';
+  const shareData = {
+    title: 'CampusGrid — LPU Student App',
+    text: 'Check out CampusGrid (LPU Touch Attendance, Timetable, Live Mess Menu & Official LPU Map Links):',
+    url: shareUrl
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareUrl).then(() => showToast('App link copied!'));
   }
+}
+
+function resetAllStudentData() {
+  if (!confirm('Reset your saved timetable, attendance & profile back to default demo data?')) return;
+  Object.values(STORAGE_KEYS).forEach((k) => {
+    if (k !== STORAGE_KEYS.THEME) localStorage.removeItem(k);
+  });
+  loadState();
+  renderAll();
+  showToast('Reset to default data');
+}
+
+// ================= UTILITIES =================
+function setText(id, txt) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = txt ?? '';
+}
+
+function val(id) {
+  return (document.getElementById(id)?.value || '').trim();
+}
+
+function setVal(id, v) {
+  const el = document.getElementById(id);
+  if (el) el.value = v ?? '';
+}
+
+function esc(str) {
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('app-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    t.style.opacity = '0';
+  }, 2000);
 }
