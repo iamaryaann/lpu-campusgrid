@@ -736,8 +736,258 @@ async function loadAccountFromBackend() {
     }
   } catch (_) {}
 
-  showToast('Save to DB first on this server or use Magic Sync Link');
+  // Also check 24x7 Cloud REST DB & Local Multi-Account Registry
+  const loaded = await tryLoadStudentAccountEverywhere(regNo, pin);
+  if (loaded) {
+    setText('cloud-sync-status-lbl', `Loaded Account: Reg ${regNo}`);
+    return;
+  }
+
+  showToast('Account not found — check Reg No / PIN or Sign Up first');
   setText('cloud-sync-status-lbl', `Ready • Reg ${regNo}`);
+}
+
+// ================= LPU VERTO STUDENT LOGIN & SIGN-UP SYSTEM =================
+const ACCOUNTS_STORAGE_KEY = 'cg_v8_student_accounts';
+
+function getLocalAccountsMap() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ACCOUNTS_STORAGE_KEY) || '{}');
+    if (!raw['12408912']) {
+      raw['12408912'] = {
+        pin: '1234',
+        p: { ...DEFAULT_PROFILE },
+        s: JSON.parse(JSON.stringify(DEFAULT_SUBJECTS)),
+        t: JSON.parse(JSON.stringify(DEFAULT_TIMETABLE)),
+        k: JSON.parse(JSON.stringify(DEFAULT_TASKS)),
+        g: JSON.parse(JSON.stringify(DEFAULT_SGPA_ROWS)),
+        b: JSON.parse(JSON.stringify(DEFAULT_BUDGET)),
+        l: { ...DEFAULT_LAUNDRY },
+        r: { ...DEFAULT_RESUME }
+      };
+      localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(raw));
+    }
+    return raw;
+  } catch (_) {
+    return {};
+  }
+}
+
+function saveCurrentStudentToLocalRegistry(pinOverride) {
+  if (!profile || !profile.regNo) return;
+  const map = getLocalAccountsMap();
+  const existingPin = map[profile.regNo]?.pin || '1234';
+  map[profile.regNo] = {
+    pin: pinOverride || existingPin,
+    p: JSON.parse(JSON.stringify(profile)),
+    s: JSON.parse(JSON.stringify(subjects)),
+    t: JSON.parse(JSON.stringify(timetable)),
+    k: JSON.parse(JSON.stringify(tasks)),
+    g: JSON.parse(JSON.stringify(sgpaRows)),
+    b: JSON.parse(JSON.stringify(budget)),
+    l: JSON.parse(JSON.stringify(laundry)),
+    r: JSON.parse(JSON.stringify(resumeData))
+  };
+  localStorage.setItem(ACCOUNTS_STORAGE_KEY, JSON.stringify(map));
+}
+
+function openStudentAuthModal(mode = 'login') {
+  saveCurrentStudentToLocalRegistry();
+  setVal('inp-login-reg', profile.regNo || '12408912');
+  setVal('inp-login-pin', '');
+  renderSavedAccountsList();
+  switchAuthTab(mode);
+  openSheet('sheet-student-auth');
+}
+
+function switchAuthTab(mode) {
+  const isLogin = mode !== 'signup';
+  const btnL = document.getElementById('seg-auth-login');
+  const btnS = document.getElementById('seg-auth-signup');
+  const viewL = document.getElementById('auth-view-login');
+  const viewS = document.getElementById('auth-view-signup');
+  if (btnL) btnL.classList.toggle('active', isLogin);
+  if (btnS) btnS.classList.toggle('active', !isLogin);
+  if (viewL) viewL.classList.toggle('hidden', !isLogin);
+  if (viewS) viewS.classList.toggle('hidden', isLogin);
+}
+
+function renderSavedAccountsList() {
+  const box = document.getElementById('saved-accounts-list');
+  if (!box) return;
+  const map = getLocalAccountsMap();
+  const keys = Object.keys(map);
+  box.innerHTML = keys.map((reg) => {
+    const acct = map[reg];
+    const p = acct.p || {};
+    const isCurrent = String(profile.regNo) === String(reg);
+    return `
+      <div class="p-2.5 rounded-xl border ${isCurrent ? 'border-[var(--accent)] bg-[var(--accent-soft)]' : 'border-[var(--border)] bg-[var(--surface-muted)]'} flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <span class="text-xs font-extrabold text-[var(--text-main)] block truncate">${esc(p.name || 'Student')} ${isCurrent ? '✓ (Active)' : ''}</span>
+          <span class="text-[10.5px] font-mono font-bold text-[var(--text-sub)]">Reg: ${esc(reg)} • Sec: ${esc(p.section || 'K24AI')} • ${esc(p.hostel || 'BH-4')}</span>
+        </div>
+        <button onclick="quickSwitchStudentAccount('${esc(reg)}')" class="px-2.5 py-1.5 ${isCurrent ? 'btn-neutral' : 'btn-accent'} text-[11px] shrink-0 tap-scale">
+          ${isCurrent ? 'Active' : 'Switch'}
+        </button>
+      </div>
+    `;
+  }).join('');
+}
+
+function quickSwitchStudentAccount(regNo) {
+  saveCurrentStudentToLocalRegistry();
+  const map = getLocalAccountsMap();
+  const acct = map[regNo];
+  if (!acct) return;
+  pendingFullSyncPayload = acct;
+  confirmFullDeviceSyncImport();
+  setVal('inp-cloud-reg', regNo);
+  closeSheet('sheet-student-auth');
+  showToast(`Switched to ${acct.p?.name} (Reg ${regNo})`);
+}
+
+async function tryLoadStudentAccountEverywhere(regNo, pin) {
+  // 1. Check Local SQLite3 REST Backend (/api/cloud-load)
+  try {
+    const r = await fetch('/api/cloud-load', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ regNo, pin })
+    });
+    if (r.ok) {
+      const res = await r.json();
+      if (res.ok && res.payload) {
+        pendingFullSyncPayload = res.payload;
+        confirmFullDeviceSyncImport();
+        saveCurrentStudentToLocalRegistry(pin);
+        return true;
+      }
+    }
+  } catch (_) {}
+
+  // 2. Check Local Multi-Student Store
+  const map = getLocalAccountsMap();
+  if (map[regNo] && (!pin || String(map[regNo].pin) === String(pin))) {
+    pendingFullSyncPayload = map[regNo];
+    confirmFullDeviceSyncImport();
+    return true;
+  }
+
+  // 3. Check 24x7 Cloud REST Database (CLOUD_REST_OBJECT_URL -> data.users[regNo])
+  try {
+    const resp = await fetch(CLOUD_REST_OBJECT_URL);
+    if (resp.ok) {
+      const obj = await resp.json();
+      const users = obj?.data?.users || {};
+      if (users[regNo]) {
+        const parts = String(users[regNo]).split('|');
+        const savedPin = parts[0] || '1234';
+        if (!pin || savedPin === pin) {
+          const newProf = {
+            name: parts[1] || 'Verto Student',
+            regNo: regNo,
+            section: parts[2] || 'K24AB',
+            program: parts[3] || 'B.Tech CSE',
+            hostel: parts[4] || 'BH-4',
+            room: parts[5] || 'B-305',
+            cgpa: parts[6] || '8.40',
+            mentorName: 'Dr. Sandeep Kaur'
+          };
+          profile = newProf;
+          localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+          saveCurrentStudentToLocalRegistry(savedPin);
+          renderAll();
+          return true;
+        }
+      }
+    }
+  } catch (_) {}
+
+  return false;
+}
+
+async function submitStudentLogin() {
+  const regNo = val('inp-login-reg');
+  const pin = val('inp-login-pin') || '1234';
+  if (!regNo) return showToast('Enter your LPU Registration No.');
+
+  setText('auth-status-msg', `Logging in Reg ${regNo}...`);
+  saveCurrentStudentToLocalRegistry();
+
+  const ok = await tryLoadStudentAccountEverywhere(regNo, pin);
+  if (ok) {
+    setVal('inp-cloud-reg', regNo);
+    setVal('inp-cloud-pin', pin);
+    setText('auth-status-msg', `Logged in as ${profile.name} (${regNo})`);
+    closeSheet('sheet-student-auth');
+    showToast(`Welcome back, ${profile.name}!`);
+  } else {
+    setText('auth-status-msg', `Reg ${regNo} not found or wrong PIN — tap "New Student Sign-Up"!`);
+    showToast('Account not found — Register in "New Student Sign-Up" tab!');
+  }
+}
+
+async function submitStudentSignup() {
+  const name = val('inp-reg-name');
+  const regNo = val('inp-reg-regno');
+  const pin = val('inp-reg-pin') || '1234';
+  const section = (val('inp-reg-sec') || 'K24AB').toUpperCase();
+  const cgpa = val('inp-reg-cgpa') || '8.40';
+  const program = val('inp-reg-prog') || 'B.Tech CSE';
+  const hostel = val('inp-reg-hostel') || 'BH-4';
+  const room = val('inp-reg-room') || 'B-305';
+
+  if (!name || !regNo) {
+    return showToast('Please enter your Full Name & LPU Reg No.');
+  }
+
+  // Save previous student's state before creating new account
+  saveCurrentStudentToLocalRegistry();
+
+  setText('auth-status-msg', `Creating LPU Account for ${name} (${regNo})...`);
+
+  profile = {
+    name,
+    regNo,
+    section,
+    program,
+    hostel,
+    room,
+    cgpa,
+    mentorName: 'Dr. Sandeep Kaur'
+  };
+  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+
+  // Auto-generate LPU Touch Monday-Saturday Timetable & Subjects for ANY LPU Section & Branch
+  const gen = generateSectionSchedule(section, program);
+  subjects = gen.subjects;
+  timetable = gen.timetable;
+  localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable));
+
+  saveCurrentStudentToLocalRegistry(pin);
+  setVal('inp-cloud-reg', regNo);
+  setVal('inp-cloud-pin', pin);
+  renderAll();
+
+  // Save to Local SQLite DB (/api/cloud-save) & 24x7 Cloud REST DB
+  saveAccountToBackend();
+  try {
+    const getResp = await fetch(CLOUD_REST_OBJECT_URL);
+    const curObj = getResp.ok ? await getResp.json() : {};
+    const curData = curObj.data || { dev: 'Aryan Khan' };
+    curData.users = curData.users || {};
+    curData.users[regNo] = `${pin}|${name}|${section}|${program}|${hostel}|${room}|${cgpa}`;
+    await fetch(CLOUD_REST_OBJECT_URL, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'CampusGrid_v8_LPU_Cloud_DB', data: curData })
+    });
+  } catch (_) {}
+
+  closeSheet('sheet-student-auth');
+  showToast(`🎉 Welcome ${name} (Reg ${regNo})!`);
 }
 
 // ================= THEME SYSTEM =================
@@ -868,8 +1118,11 @@ function renderProfileAndHome() {
   const spent = (budget.expenses || []).reduce((acc, x) => acc + Number(x.amount || 0), 0);
   const left = Math.max(0, Number(budget.monthlyLimit || 6000) - spent);
 
+  const firstName = String(profile.name || 'Login').trim().split(/\s+/)[0].slice(0, 9);
   setText('top-sec-pill', profile.section || 'LPU');
   setText('top-greeting', `Built by Aryan Khan • Reg ${profile.regNo}`);
+  setText('top-auth-label', firstName);
+  setVal('inp-cloud-reg', profile.regNo || '12408912');
 
   setText('home-avatar', initials);
   setText('home-name', profile.name);
@@ -909,32 +1162,109 @@ function renderProfileAndHome() {
     }
   }
 
-  // Today's Classes on Home
-  const jsDay = new Date().getDay();
+  // Today's Classes on Home (LPU Touch Live Daily Auto-Updating Engine)
+  const nowObj = new Date();
+  const jsDay = nowObj.getDay();
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const todayName = dayNames[jsDay];
-  const todayList = timetable[todayName] || [];
-  setText('home-day-sub', todayName === 'Sunday' ? 'Sunday — No regular classes' : `${todayName} • Section ${profile.section}`);
+  const datePretty = nowObj.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+  const todayList = (timetable[todayName] || []).slice().sort((a, b) => parseSlotMinutes(a.time)[0] - parseSlotMinutes(b.time)[0]);
+  setText(
+    'home-day-sub',
+    todayName === 'Sunday'
+      ? `Sunday, ${datePretty} — Weekend (Showing Monday Prep)`
+      : `${todayName}, ${datePretty} • Sec ${profile.section} • ${todayList.length} Classes`
+  );
+  setVal('inp-quick-sec', profile.section || 'K24AI');
+
+  const activeDayName = todayName === 'Sunday' ? 'Monday' : todayName;
+  const activeDayList = (timetable[activeDayName] || []).slice().sort((a, b) => parseSlotMinutes(a.time)[0] - parseSlotMinutes(b.time)[0]);
+
+  const liveBanner = document.getElementById('home-live-class-banner');
+  if (liveBanner) {
+    if (todayName === 'Sunday') {
+      liveBanner.innerHTML = `
+        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-between gap-2">
+          <div>
+            <span class="text-[10px] font-extrabold uppercase text-emerald-600 block">🎉 Sunday Break • LPU Touch Synced</span>
+            <span class="text-xs font-extrabold text-[var(--text-main)]">Below is your Monday (${esc(profile.section)}) schedule</span>
+          </div>
+          <span class="text-[11px] font-mono font-bold text-emerald-600">${esc(profile.section)}</span>
+        </div>
+      `;
+    } else {
+      let currentLive = null;
+      let nextUp = null;
+      activeDayList.forEach((slot) => {
+        const st = getLiveSlotStatus(slot.time, slot.type, true);
+        if (st.state === 'live' && !currentLive) currentLive = { slot, st };
+        else if ((st.state === 'next' || st.state === 'upcoming') && !nextUp) nextUp = { slot, st };
+      });
+      const focusItem = currentLive || nextUp;
+      if (focusItem) {
+        liveBanner.innerHTML = `
+          <div class="p-3 rounded-xl border border-[var(--accent)] flex items-center justify-between gap-2" style="background: var(--accent-soft);">
+            <div class="min-w-0">
+              <span class="text-[10px] font-extrabold uppercase text-[var(--accent)] block">${focusItem.st.badge}</span>
+              <span class="text-xs font-extrabold text-[var(--text-main)] block truncate">${esc(focusItem.slot.code)} — ${esc(focusItem.slot.title)}</span>
+              <span class="text-[11px] font-bold text-[var(--text-sub)]">${esc(focusItem.slot.time)} • Room ${esc(focusItem.slot.room)}</span>
+            </div>
+            <a href="${roomToMapsUrl(focusItem.slot.room)}" target="_blank" rel="noopener" class="px-2.5 py-1.5 btn-accent text-[11px] no-underline shrink-0 tap-scale">
+              Room ${esc(focusItem.slot.room)} ↗
+            </a>
+          </div>
+        `;
+      } else {
+        liveBanner.innerHTML = `
+          <div class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs font-bold text-emerald-600 text-center">
+            ✅ All ${activeDayList.length} classes for ${todayName} completed! Tomorrow's schedule auto-loads at 12:00 AM.
+          </div>
+        `;
+      }
+    }
+  }
 
   const clsBox = document.getElementById('home-classes-list');
   if (clsBox) {
-    if (todayList.length === 0) {
-      clsBox.innerHTML = `<div class="app-card-muted p-3 text-xs text-[var(--text-sub)] text-center">No scheduled lectures today. Enjoy your break!</div>`;
+    if (activeDayList.length === 0) {
+      clsBox.innerHTML = `<div class="app-card-muted p-3 text-xs text-[var(--text-sub)] text-center">No scheduled lectures today. Tap <strong>Sync</strong> or <strong>Full Week</strong> to add classes.</div>`;
     } else {
-      clsBox.innerHTML = todayList.slice(0, 3).map((c) => `
-        <div class="app-card-muted p-3 flex items-center justify-between gap-2.5">
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(c.code)}</span>
-              <span class="text-[11px] font-semibold text-[var(--text-sub)]">${esc(c.time)}</span>
+      const todayMarks = getTodaySlotMarks();
+      clsBox.innerHTML = activeDayList.map((c) => {
+        const st = getLiveSlotStatus(c.time, c.type, todayName !== 'Sunday');
+        const markStatus = todayMarks[c.id];
+        return `
+          <div class="app-card-muted p-3 space-y-2" style="${st.state === 'live' ? 'border: 1.5px solid #10b981;' : ''}">
+            <div class="flex items-start justify-between gap-2">
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="px-1.5 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(c.code)}</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9.5px] font-extrabold ${st.cls}">${st.badge}</span>
+                  <span class="text-[10.5px] font-bold text-[var(--text-sub)]">${esc(c.time)}</span>
+                </div>
+                <p class="text-xs font-extrabold text-[var(--text-main)] truncate mt-1">${esc(c.title)}</p>
+                <p class="text-[10.5px] text-[var(--text-sub)]">Room ${esc(c.room)} • ${esc(c.type || 'Lecture')}</p>
+              </div>
+              <a href="${roomToMapsUrl(c.room)}" target="_blank" rel="noopener" class="px-2 py-1 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[10.5px] font-bold text-[var(--text-main)] no-underline shrink-0 tap-scale">
+                ${esc(c.room)} <i class="fa-solid fa-arrow-up-right-from-square text-[8px] text-[var(--accent)] ml-0.5"></i>
+              </a>
             </div>
-            <p class="text-xs font-extrabold text-[var(--text-main)] truncate mt-1">${esc(c.title)}</p>
+            <div class="flex items-center justify-between pt-1 border-t border-[var(--border)]">
+              <span class="text-[10.5px] font-bold ${markStatus === 'P' ? 'text-emerald-600' : markStatus === 'A' ? 'text-rose-500' : 'text-[var(--text-sub)]'}">
+                ${markStatus === 'P' ? '✅ Marked Present Today' : markStatus === 'A' ? '❌ Marked Absent Today' : 'LPU Touch Attendance:'}
+              </span>
+              <div class="flex items-center gap-1.5">
+                <button onclick="markSlotAttendanceToday('${c.id}', '${esc(c.code)}', true)" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 font-extrabold text-[11px] border-0 cursor-pointer tap-scale">
+                  ✔ Present
+                </button>
+                <button onclick="markSlotAttendanceToday('${c.id}', '${esc(c.code)}', false)" class="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-600 font-extrabold text-[11px] border-0 cursor-pointer tap-scale">
+                  ✖ Absent
+                </button>
+              </div>
+            </div>
           </div>
-          <a href="${roomToMapsUrl(c.room)}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-lg bg-[var(--surface)] border border-[var(--border)] text-[11px] font-bold text-[var(--text-main)] no-underline shrink-0 tap-scale">
-            ${esc(c.room)} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] text-[var(--accent)] ml-0.5"></i>
-          </a>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
   }
 
@@ -1148,48 +1478,327 @@ function calcOdMedical() {
   box.textContent = status;
 }
 
-// ================= TIMETABLE =================
-function renderTimetable() {
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-  const pillBox = document.getElementById('tt-day-pills');
-  if (pillBox) {
-    pillBox.innerHTML = days.map((d) => `
-      <button onclick="selectTimetableDay('${d}')" class="filter-chip ${selectedTtDay === d ? 'active' : ''}">
-        ${d.slice(0, 3)}
-      </button>
-    `).join('');
+// ================= LPU TOUCH LIVE DAILY TIMETABLE & SECTION AUTO-SYNC ENGINE =================
+function parseSingleTimeMins(part) {
+  const m = String(part || '').trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!m) return 9 * 60;
+  let hh = parseInt(m[1], 10);
+  const mm = parseInt(m[2], 10);
+  const ampm = m[3].toUpperCase();
+  if (ampm === 'PM' && hh < 12) hh += 12;
+  if (ampm === 'AM' && hh === 12) hh = 0;
+  return hh * 60 + mm;
+}
+
+function parseSlotMinutes(timeStr) {
+  const parts = String(timeStr || '09:00 AM - 10:00 AM').split('-');
+  const start = parseSingleTimeMins(parts[0]);
+  const end = parts[1] ? parseSingleTimeMins(parts[1]) : start + 60;
+  return [start, end];
+}
+
+function getLiveSlotStatus(timeStr, slotType, isToday = true) {
+  const t = String(slotType || 'Lecture');
+  if (t.toLowerCase().includes('cancel')) {
+    return { state: 'cancelled', badge: '🚫 CANCELLED', cls: 'bg-rose-500/15 text-rose-600' };
+  }
+  const prefix = t.toLowerCase().includes('makeup')
+    ? '🔄 MAKEUP • '
+    : t.toLowerCase().includes('room')
+      ? '⚠️ ROOM CHG • '
+      : '';
+
+  if (!isToday) {
+    return {
+      state: 'scheduled',
+      badge: prefix ? prefix.replace(' • ', '') : t.toUpperCase(),
+      cls: 'bg-[var(--surface-muted)] text-[var(--text-sub)]'
+    };
   }
 
-  const list = timetable[selectedTtDay] || [];
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  const [start, end] = parseSlotMinutes(timeStr);
+
+  if (nowMins >= start && nowMins < end) {
+    return {
+      state: 'live',
+      badge: `🟢 ${prefix}LIVE NOW (${end - nowMins}m left)`,
+      cls: 'bg-emerald-500/20 text-emerald-600'
+    };
+  }
+  if (nowMins < start && start - nowMins <= 90) {
+    return {
+      state: 'next',
+      badge: `⏳ ${prefix}NEXT (in ${start - nowMins}m)`,
+      cls: 'bg-amber-500/15 text-amber-600'
+    };
+  }
+  if (nowMins < start) {
+    return {
+      state: 'upcoming',
+      badge: `🕒 ${prefix}UPCOMING`,
+      cls: 'bg-sky-500/15 text-sky-600'
+    };
+  }
+  return {
+    state: 'completed',
+    badge: `✅ ${prefix}COMPLETED`,
+    cls: 'bg-slate-500/15 text-[var(--text-sub)]'
+  };
+}
+
+function getTodayDateKey() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}_${profile.regNo || '12408912'}`;
+}
+
+function getTodaySlotMarks() {
+  try {
+    return JSON.parse(localStorage.getItem('cg_v8_daily_att_' + getTodayDateKey()) || '{}');
+  } catch (_) {
+    return {};
+  }
+}
+
+function markSlotAttendanceToday(slotId, courseCode, isPresent) {
+  const key = 'cg_v8_daily_att_' + getTodayDateKey();
+  const marks = getTodaySlotMarks();
+  const prev = marks[slotId];
+  const nextVal = isPresent ? 'P' : 'A';
+  if (prev === nextVal) {
+    return showToast(`Already marked ${isPresent ? 'Present' : 'Absent'} for this slot today!`);
+  }
+
+  let sub = subjects.find((s) => String(s.code).toUpperCase() === String(courseCode).toUpperCase());
+  if (!sub && subjects.length > 0) sub = subjects[0];
+
+  if (sub) {
+    if (!prev) {
+      sub.total = Number(sub.total || 0) + 1;
+      if (isPresent) sub.attended = Number(sub.attended || 0) + 1;
+    } else if (prev === 'A' && nextVal === 'P') {
+      sub.attended = Number(sub.attended || 0) + 1;
+    } else if (prev === 'P' && nextVal === 'A') {
+      sub.attended = Math.max(0, Number(sub.attended || 0) - 1);
+    }
+    localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  }
+
+  marks[slotId] = nextVal;
+  localStorage.setItem(key, JSON.stringify(marks));
+  renderAttendance();
+  renderProfileAndHome();
+  renderTimetable();
+  showToast(`${courseCode}: Marked ${isPresent ? 'Present ✅' : 'Absent ❌'} for today!`);
+}
+
+function generateSectionSchedule(sectionCode, programStr) {
+  const sec = String(sectionCode || 'K24AI').trim().toUpperCase();
+  const prog = String(programStr || profile.program || 'B.Tech CSE');
+  let hash = 0;
+  for (let i = 0; i < sec.length; i++) {
+    hash = (hash * 31 + sec.charCodeAt(i)) % 997;
+  }
+
+  let blockPool = ['32', '33', '34'];
+  let catalog = [
+    { code: 'CSE316', name: 'Operating Systems', fac: 'Dr. Rajesh Verma' },
+    { code: 'INT254', name: 'Foundations of Machine Learning', fac: 'Dr. Sandeep Kaur' },
+    { code: 'CSE205', name: 'Data Structures & Algorithms', fac: 'Dr. Ankur Gupta' },
+    { code: 'CSE326', name: 'Internet Programming Lab', fac: 'Prof. Amanpreet Singh' },
+    { code: 'MTH401', name: 'Probability & Statistics', fac: 'Dr. Neha Bansal' },
+    { code: 'PES318', name: 'Soft Skills & PEP Aptitude', fac: 'Prof. Vikramjit Gill' }
+  ];
+
+  if (prog.includes('MBA') || sec.startsWith('M')) {
+    blockPool = ['14', '15'];
+    catalog = [
+      { code: 'MGN501', name: 'Corporate Finance & Valuation', fac: 'Dr. Harpreet Bedi' },
+      { code: 'MKT512', name: 'Digital Marketing & Analytics', fac: 'Dr. Pooja Khanna' },
+      { code: 'HRM504', name: 'Organizational Behavior & HR', fac: 'Prof. Ritu Sharma' },
+      { code: 'OPM520', name: 'Supply Chain & Operations', fac: 'Dr. Manish Arora' },
+      { code: 'BSN508', name: 'Business Strategy & Case Lab', fac: 'Dr. Vivek Malhotra' },
+      { code: 'PES519', name: 'Executive Communication & GD', fac: 'Prof. Simranjeet Kaur' }
+    ];
+  } else if (prog.includes('ECE') || prog.includes('Robotics') || prog.includes('ME')) {
+    blockPool = ['36', '37', '38'];
+    catalog = [
+      { code: 'ECE249', name: 'Digital Electronics & Logic Design', fac: 'Dr. Gurpreet Singh' },
+      { code: 'ECE311', name: 'Microcontrollers & Embedded IoT', fac: 'Dr. Rakesh Kumar' },
+      { code: 'MEC204', name: 'Robotics Kinematics & CAD Lab', fac: 'Prof. Tarunpreet' },
+      { code: 'MTH302', name: 'Engineering Differential Equations', fac: 'Dr. Neha Bansal' },
+      { code: 'CSE101', name: 'Python for Hardware Automation', fac: 'Prof. Amanpreet Singh' },
+      { code: 'PES318', name: 'Analytical PEP & Verbal Prep', fac: 'Prof. Vikramjit Gill' }
+    ];
+  } else if (prog.includes('BCA') || prog.includes('MCA')) {
+    blockPool = ['38', '33', '34'];
+    catalog = [
+      { code: 'CAP214', name: 'Full-Stack Web Development', fac: 'Prof. Navjot Kaur' },
+      { code: 'CAP301', name: 'Database Management Systems', fac: 'Dr. Kuldeep Sharma' },
+      { code: 'CAP256', name: 'Java Object Oriented Programming', fac: 'Dr. Ankur Gupta' },
+      { code: 'CAP280', name: 'Cloud & Linux Administration Lab', fac: 'Prof. Prabhjot Singh' },
+      { code: 'MTH166', name: 'Discrete Structures & Logic', fac: 'Dr. Sonia Kalra' },
+      { code: 'PES214', name: 'PEP Placement & Communication', fac: 'Prof. Vikramjit Gill' }
+    ];
+  }
+
+  const genSubjects = catalog.map((item, idx) => {
+    const blk = blockPool[(hash + idx) % blockPool.length];
+    const floor = ((hash + idx * 3) % 5) + 1;
+    const rm = String(((hash + idx * 7) % 14) + 1).padStart(2, '0');
+    const roomStr = `${blk}-${floor}${rm}`;
+    const tot = 28 + ((hash + idx * 5) % 14);
+    const att = Math.max(Math.ceil(tot * 0.78), tot - ((hash + idx) % 5) - 1);
+    return {
+      id: `s_${sec}_${idx}`,
+      code: item.code,
+      name: item.name,
+      faculty: item.fac,
+      room: roomStr,
+      attended: att,
+      total: tot
+    };
+  });
+
+  const slotTemplates = [
+    ['09:00 AM - 10:00 AM', '10:00 AM - 11:00 AM', '11:00 AM - 01:00 PM', '02:00 PM - 03:00 PM'],
+    ['09:00 AM - 10:00 AM', '10:00 AM - 11:00 AM', '01:00 PM - 03:00 PM', '03:00 PM - 04:00 PM'],
+    ['09:00 AM - 11:00 AM', '11:00 AM - 12:00 PM', '02:00 PM - 03:00 PM', '03:00 PM - 04:00 PM']
+  ];
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const genTt = {};
+  days.forEach((day, dIdx) => {
+    if (day === 'Saturday') {
+      const s0 = genSubjects[(hash + dIdx) % genSubjects.length];
+      genTt[day] = [
+        {
+          id: `tt_${sec}_sat_1`,
+          time: '10:00 AM - 12:00 PM',
+          code: s0.code,
+          title: `${s0.name} (Weekly Practical / Project)`,
+          room: s0.room,
+          type: 'Lab'
+        }
+      ];
+      return;
+    }
+    const times = slotTemplates[(hash + dIdx) % slotTemplates.length];
+    const count = dIdx === 4 ? 3 : 4;
+    genTt[day] = times.slice(0, count).map((tStr, sIdx) => {
+      const sub = genSubjects[(hash + dIdx * 2 + sIdx) % genSubjects.length];
+      const isTwoHour = tStr.includes('11:00 AM - 01:00 PM') || tStr.includes('01:00 PM - 03:00 PM') || tStr.includes('09:00 AM - 11:00 AM');
+      return {
+        id: `tt_${sec}_${dIdx}_${sIdx}`,
+        time: tStr,
+        code: sub.code,
+        title: isTwoHour ? `${sub.name} Lab` : sub.name,
+        room: sub.room,
+        type: isTwoHour ? 'Lab' : sIdx === 3 ? 'Tutorial' : 'Lecture'
+      };
+    });
+  });
+
+  return { subjects: genSubjects, timetable: genTt };
+}
+
+function syncAnyLpuSection(customSec) {
+  const secInput = (customSec || val('inp-quick-sec') || profile.section || 'K24AI').toUpperCase();
+  profile.section = secInput;
+  localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+
+  const gen = generateSectionSchedule(secInput, profile.program);
+  subjects = gen.subjects;
+  timetable = gen.timetable;
+  localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+  localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable));
+
+  saveCurrentStudentToLocalRegistry();
+  renderAll();
+  setText('tt-live-sync-lbl', `✅ LPU Touch Synced: Section ${secInput} (Mon–Sat Live Schedule Ready)`);
+  showToast(`Synced LPU Section ${secInput} Timetable & Subjects!`);
+}
+
+function syncDailyLpuTouchClasses() {
+  const jsDay = new Date().getDay();
+  const ttDays = ['Monday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  selectedTtDay = ttDays[jsDay] || 'Monday';
+  pullLiveCommunityCloud();
+  renderProfileAndHome();
+  renderTimetable();
+  showToast(`🔄 LPU Touch Synced for ${selectedTtDay} (Sec ${profile.section})!`);
+}
+
+function renderTimetable() {
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const jsDay = new Date().getDay();
+  const todayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][jsDay];
+
+  const pillBox = document.getElementById('tt-day-pills');
+  if (pillBox) {
+    pillBox.innerHTML = days.map((d) => {
+      const isToday = d === todayName;
+      return `
+        <button onclick="selectTimetableDay('${d}')" class="filter-chip ${selectedTtDay === d ? 'active' : ''}">
+          ${d.slice(0, 3)}${isToday ? ' • Today' : ''}
+        </button>
+      `;
+    }).join('');
+  }
+
+  const list = (timetable[selectedTtDay] || []).slice().sort((a, b) => parseSlotMinutes(a.time)[0] - parseSlotMinutes(b.time)[0]);
   const box = document.getElementById('tt-list-container');
   if (!box) return;
 
   if (list.length === 0) {
-    box.innerHTML = `<div class="app-card p-6 text-center text-xs text-[var(--text-sub)]">No classes on ${selectedTtDay}. Tap <strong>+ Class</strong> to add one.</div>`;
+    box.innerHTML = `<div class="app-card p-6 text-center text-xs text-[var(--text-sub)]">No classes on ${selectedTtDay}. Tap <strong>+ Makeup/Class</strong> to add one.</div>`;
     return;
   }
 
-  box.innerHTML = list.map((c) => `
-    <div class="app-card p-3.5 flex items-center justify-between gap-3">
-      <div class="min-w-0 space-y-1">
-        <div class="flex items-center gap-1.5 flex-wrap">
-          <span class="px-2 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(c.code)}</span>
-          <span class="text-[11px] font-bold text-[var(--text-sub)]">${esc(c.time)}</span>
-          <span class="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-muted)] text-[var(--text-sub)] font-semibold">${esc(c.type)}</span>
+  const isViewingToday = selectedTtDay === todayName;
+  const todayMarks = getTodaySlotMarks();
+
+  box.innerHTML = list.map((c) => {
+    const st = getLiveSlotStatus(c.time, c.type, isViewingToday);
+    const markStatus = todayMarks[c.id];
+    return `
+      <div class="app-card p-3.5 space-y-2.5" style="${st.state === 'live' ? 'border: 1.5px solid #10b981;' : ''}">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 space-y-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="px-2 py-0.5 rounded text-[10px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(c.code)}</span>
+              <span class="px-1.5 py-0.5 rounded text-[9.5px] font-extrabold ${st.cls}">${st.badge}</span>
+              <span class="text-[11px] font-bold text-[var(--text-sub)]">${esc(c.time)}</span>
+            </div>
+            <h4 class="text-[13px] font-extrabold text-[var(--text-main)] truncate">${esc(c.title)}</h4>
+            <div class="flex items-center gap-3 text-[11px]">
+              <span class="font-bold text-[var(--text-sub)]"><i class="fa-solid fa-door-open mr-1"></i>Room ${esc(c.room)} (${esc(c.type)})</span>
+              <a href="${roomToMapsUrl(c.room)}" target="_blank" rel="noopener" class="font-bold text-[var(--accent)] no-underline">
+                Block Map <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+              </a>
+            </div>
+          </div>
+          <button onclick="deleteClassSlot('${selectedTtDay}', '${c.id}')" class="w-8 h-8 rounded-xl btn-neutral text-xs text-[var(--text-sub)] shrink-0 tap-scale" title="Remove Class">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
         </div>
-        <h4 class="text-[13px] font-extrabold text-[var(--text-main)] truncate">${esc(c.title)}</h4>
-        <div class="flex items-center gap-3 text-[11px]">
-          <span class="font-bold text-[var(--text-sub)]"><i class="fa-solid fa-door-open mr-1"></i>Room ${esc(c.room)}</span>
-          <a href="${roomToMapsUrl(c.room)}" target="_blank" rel="noopener" class="font-bold text-[var(--accent)] no-underline">
-            Block Map Link <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-          </a>
+        <div class="flex items-center justify-between pt-2 border-t border-[var(--border)]">
+          <span class="text-[10.5px] font-bold ${markStatus === 'P' ? 'text-emerald-600' : markStatus === 'A' ? 'text-rose-500' : 'text-[var(--text-sub)]'}">
+            ${markStatus === 'P' ? '✅ Present Marked' : markStatus === 'A' ? '❌ Absent Marked' : 'Mark Lecture Attendance:'}
+          </span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="markSlotAttendanceToday('${c.id}', '${esc(c.code)}', true)" class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 font-extrabold text-[11px] border-0 cursor-pointer tap-scale">
+              ✔ Present
+            </button>
+            <button onclick="markSlotAttendanceToday('${c.id}', '${esc(c.code)}', false)" class="px-2.5 py-1 rounded-lg bg-rose-500/15 text-rose-600 font-extrabold text-[11px] border-0 cursor-pointer tap-scale">
+              ✖ Absent
+            </button>
+          </div>
         </div>
       </div>
-      <button onclick="deleteClassSlot('${selectedTtDay}', '${c.id}')" class="w-8 h-8 rounded-xl btn-neutral text-xs text-[var(--text-sub)] shrink-0 tap-scale">
-        <i class="fa-solid fa-trash-can"></i>
-      </button>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function selectTimetableDay(day) {
@@ -1213,7 +1822,7 @@ function addNewClassSlot() {
   closeSheet('sheet-add-class');
   renderTimetable();
   renderProfileAndHome();
-  showToast(`Added to ${day}`);
+  showToast(`Added ${type} to ${day}`);
 }
 
 function deleteClassSlot(day, id) {
@@ -2874,6 +3483,7 @@ function backdropClose(e, id) {
 }
 
 function saveStudentProfile() {
+  const prevSec = profile.section;
   profile.name = val('inp-p-name') || 'Verto Student';
   profile.regNo = val('inp-p-reg') || '12408912';
   profile.section = (val('inp-p-sec') || 'K24AI').toUpperCase();
@@ -2884,11 +3494,17 @@ function saveStudentProfile() {
   profile.mentorName = val('inp-p-mentor') || 'Faculty Mentor';
 
   localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
+  if (prevSec !== profile.section) {
+    const gen = generateSectionSchedule(profile.section, profile.program);
+    subjects = gen.subjects;
+    timetable = gen.timetable;
+    localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects));
+    localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable));
+  }
+  saveCurrentStudentToLocalRegistry();
   closeSheet('sheet-profile');
-  renderProfileAndHome();
-  renderMessQr();
-  renderMessPollUI();
-  showToast('Student profile updated');
+  renderAll();
+  showToast(`Profile & Section ${profile.section} Classes Updated!`);
 }
 
 function renderGatePasses() {

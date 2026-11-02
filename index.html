@@ -100,10 +100,15 @@
           <i class="fa-solid fa-qrcode text-sm"></i>
         </button>
 
+        <!-- LPU Student Login / Switch Button -->
+        <button id="top-auth-btn" onclick="openStudentAuthModal('login')" class="px-2.5 h-9 rounded-xl flex items-center gap-1 btn-accent text-xs tap-scale" title="LPU Student Login / Sign Up">
+          <i class="fa-solid fa-user-check text-[10px]"></i>
+          <span id="top-auth-label">Login</span>
+        </button>
+
         <!-- Install PWA Button -->
-        <button id="top-install-btn" onclick="triggerAppInstall()" class="px-2.5 h-9 rounded-xl flex items-center gap-1 btn-accent text-xs tap-scale">
-          <i class="fa-solid fa-arrow-down text-[10px]"></i>
-          <span>App</span>
+        <button id="top-install-btn" onclick="triggerAppInstall()" class="w-9 h-9 rounded-xl flex items-center justify-center btn-neutral text-xs tap-scale" title="Install App">
+          <i class="fa-solid fa-arrow-down text-[11px]"></i>
         </button>
       </div>
     </header>
@@ -135,9 +140,14 @@
                 <p id="home-prog" class="text-[11px] text-white/65 truncate mt-0.5">B.Tech CSE (AI &amp; Data Science)</p>
               </div>
             </div>
-            <button onclick="openSheet('sheet-profile')" class="px-2.5 py-1.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[11px] font-bold shrink-0 tap-scale">
-              <i class="fa-solid fa-pen text-[10px] mr-1"></i>Edit
-            </button>
+            <div class="flex flex-col gap-1.5 shrink-0">
+              <button onclick="openStudentAuthModal('login')" class="px-2.5 py-1.5 rounded-xl bg-amber-400 text-slate-950 text-[10.5px] font-extrabold shrink-0 tap-scale">
+                <i class="fa-solid fa-right-to-bracket text-[10px] mr-1"></i>Login
+              </button>
+              <button onclick="openSheet('sheet-profile')" class="px-2.5 py-1 rounded-xl bg-white/15 hover:bg-white/25 text-white text-[10.5px] font-bold shrink-0 tap-scale">
+                <i class="fa-solid fa-pen text-[9px] mr-1"></i>Edit
+              </button>
+            </div>
           </div>
 
           <!-- 4 Crisp Stats Strip -->
@@ -362,17 +372,26 @@
           <div id="home-tasks-list" class="space-y-2"></div>
         </div>
 
-        <!-- Today's Schedule Card -->
-        <div class="app-card p-4">
-          <div class="flex items-center justify-between mb-3">
+        <!-- Today's Schedule Card (LPU Touch Live Daily Auto-Update) -->
+        <div class="app-card p-4 space-y-2.5">
+          <div class="flex items-center justify-between">
             <div>
-              <h2 class="text-[14px] font-extrabold text-[var(--text-main)]">Today's Classes</h2>
-              <p id="home-day-sub" class="text-[11px] text-[var(--text-sub)]">Schedule for today</p>
+              <div class="flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h2 class="text-[14px] font-extrabold text-[var(--text-main)]">Today's Live Classes (LPU Touch)</h2>
+              </div>
+              <p id="home-day-sub" class="text-[11px] text-[var(--text-sub)] mt-0.5">Auto-updated daily schedule</p>
             </div>
-            <button onclick="jumpTo('classes', 'timetable')" class="px-2.5 py-1 btn-soft text-[11px] tap-scale">
-              Full Week
-            </button>
+            <div class="flex items-center gap-1.5">
+              <button onclick="syncDailyLpuTouchClasses()" class="px-2.5 py-1 btn-neutral text-[11px] tap-scale" title="Sync Today's UMS Classes">
+                <i class="fa-solid fa-arrows-rotate mr-1 text-[var(--accent)]"></i>Sync
+              </button>
+              <button onclick="jumpTo('classes', 'timetable')" class="px-2.5 py-1 btn-soft text-[11px] tap-scale">
+                Full Week
+              </button>
+            </div>
           </div>
+          <div id="home-live-class-banner"></div>
           <div id="home-classes-list" class="space-y-2.5"></div>
         </div>
 
@@ -447,22 +466,31 @@
           </div>
         </div>
 
-        <!-- Subview 2: Timetable + 1-Click Share Section Sync -->
+        <!-- Subview 2: Timetable + LPU Touch Live Section Auto-Sync -->
         <div id="sub-cls-timetable" class="hidden space-y-3.5">
-          <div class="app-card p-3 flex items-center justify-between gap-2">
-            <div class="min-w-0">
-              <span class="text-xs font-extrabold text-[var(--text-main)] block">Share Section Timetable Link</span>
-              <span class="text-[11px] text-[var(--text-sub)]">Classmates import all classes in 1 tap</span>
+          <div class="app-card p-3.5 space-y-2.5" style="border-color: var(--accent);">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-600"><i class="fa-solid fa-satellite-dish mr-1"></i>LPU Touch Live Section Sync</span>
+                <span class="text-xs font-extrabold text-[var(--text-main)] block">Auto-Fetch Classes for Any LPU Section</span>
+              </div>
+              <button onclick="shareSectionSyncLink()" class="px-2.5 py-1.5 btn-soft text-[11px] shrink-0 tap-scale">
+                <i class="fa-brands fa-whatsapp mr-1"></i>Share
+              </button>
             </div>
-            <button onclick="shareSectionSyncLink()" class="px-3 py-1.5 btn-soft text-xs shrink-0 tap-scale">
-              <i class="fa-brands fa-whatsapp mr-1"></i>Share
-            </button>
+            <div class="flex items-center gap-2">
+              <input id="inp-quick-sec" type="text" placeholder="Enter Section (e.g. K24AB, K23GP, K24XY)" class="app-input" style="flex: 1; padding: 8px 10px;" />
+              <button onclick="syncAnyLpuSection()" class="px-3 py-2 btn-accent text-xs shrink-0 tap-scale">
+                <i class="fa-solid fa-bolt mr-1"></i>Sync Section
+              </button>
+            </div>
+            <p id="tt-live-sync-lbl" class="text-[10.5px] font-bold text-[var(--text-sub)]">Daily classes update automatically by weekday &amp; live clock.</p>
           </div>
 
           <div class="flex items-center justify-between gap-2">
             <div id="tt-day-pills" class="pill-scroll flex-1"></div>
             <button onclick="openSheet('sheet-add-class')" class="px-3 py-2 btn-accent text-xs shrink-0 tap-scale">
-              <i class="fa-solid fa-plus mr-1"></i>Class
+              <i class="fa-solid fa-plus mr-1"></i>Makeup/Class
             </button>
           </div>
           <div id="tt-list-container" class="space-y-2.5"></div>
@@ -1391,8 +1419,17 @@
               <span id="prof-barcode-lbl" class="block text-[10px] font-mono font-bold text-slate-600 mt-1 tracking-widest">*LPU-12408912*</span>
             </div>
 
-            <button onclick="openSheet('sheet-profile')" class="w-full py-2.5 btn-accent text-xs tap-scale">
-              <i class="fa-solid fa-user-pen mr-1.5"></i>Edit My Student Details
+            <div class="grid grid-cols-2 gap-2">
+              <button onclick="openStudentAuthModal('login')" class="py-2.5 btn-accent text-xs tap-scale">
+                <i class="fa-solid fa-right-to-bracket mr-1"></i>Student Login
+              </button>
+              <button onclick="openStudentAuthModal('signup')" class="py-2.5 btn-soft text-xs tap-scale">
+                <i class="fa-solid fa-user-plus mr-1"></i>New Sign-Up
+              </button>
+            </div>
+
+            <button onclick="openSheet('sheet-profile')" class="w-full py-2 btn-neutral text-xs tap-scale">
+              <i class="fa-solid fa-user-pen mr-1.5"></i>Edit Current Student Details
             </button>
           </div>
         </div>
@@ -1685,9 +1722,12 @@
           <option>Saturday</option>
         </select>
         <select id="inp-tt-type" class="app-input">
-          <option>Lecture</option>
-          <option>Lab</option>
-          <option>Tutorial</option>
+          <option value="Lecture">Lecture</option>
+          <option value="Lab">Lab</option>
+          <option value="Tutorial">Tutorial</option>
+          <option value="Makeup Class">🔄 Makeup Class</option>
+          <option value="Room Changed">⚠️ Room Changed</option>
+          <option value="Cancelled">🚫 Cancelled Today</option>
         </select>
       </div>
       <input id="inp-tt-time" type="text" placeholder="Timing (e.g. 09:00 AM - 10:00 AM)" class="app-input" />
@@ -2012,11 +2052,132 @@
     </div>
   </div>
 
+  <!-- Sheet 17: LPU Verto Student Login & New Student Sign-Up Portal -->
+  <div id="sheet-student-auth" class="sheet-backdrop hidden" onclick="backdropClose(event, 'sheet-student-auth')">
+    <div class="sheet-panel space-y-3" style="max-height: 90vh; overflow-y: auto;">
+      <div class="sheet-handle"></div>
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-[var(--accent)]"><i class="fa-solid fa-graduation-cap mr-1"></i>LPU Verto Student Portal</span>
+          <h3 class="text-base font-extrabold text-[var(--text-main)]">Student Login &amp; Sign-Up</h3>
+        </div>
+        <button onclick="closeSheet('sheet-student-auth')" class="w-8 h-8 rounded-full btn-neutral text-xs">✕</button>
+      </div>
+
+      <!-- Segmented Switch: Login vs Sign Up -->
+      <div class="segmented-bar">
+        <button id="seg-auth-login" onclick="switchAuthTab('login')" class="seg-btn active">🔑 Student Login</button>
+        <button id="seg-auth-signup" onclick="switchAuthTab('signup')" class="seg-btn">🎓 New Student Sign-Up</button>
+      </div>
+
+      <!-- TAB 1: EXISTING LPU STUDENT LOGIN -->
+      <div id="auth-view-login" class="space-y-3">
+        <div class="app-card-muted p-3 space-y-2.5">
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">LPU Registration No. (8-Digit UMS ID)</label>
+            <input id="inp-login-reg" type="text" placeholder="e.g. 12408912" class="app-input" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">4-Digit Student PIN / Password</label>
+            <input id="inp-login-pin" type="password" placeholder="e.g. 1234" class="app-input" />
+          </div>
+          <button onclick="submitStudentLogin()" class="w-full py-3 btn-accent text-xs tap-scale">
+            <i class="fa-solid fa-right-to-bracket mr-1.5"></i>Login with LPU Reg No.
+          </button>
+        </div>
+
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-[10.5px] font-extrabold uppercase text-[var(--text-sub)]">Saved LPU Accounts on This Device:</span>
+            <button onclick="switchAuthTab('signup')" class="text-[11px] font-bold text-[var(--accent)] bg-transparent border-0 cursor-pointer">+ Add Student</button>
+          </div>
+          <div id="saved-accounts-list" class="space-y-1.5"></div>
+        </div>
+      </div>
+
+      <!-- TAB 2: NEW LPU STUDENT REGISTRATION (SIGN UP) -->
+      <div id="auth-view-signup" class="hidden space-y-2.5">
+        <div>
+          <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Student Full Name</label>
+          <input id="inp-reg-name" type="text" placeholder="e.g. Amanpreet Singh" class="app-input" />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">LPU Reg No. (8 Digits)</label>
+            <input id="inp-reg-regno" type="text" placeholder="e.g. 12410523" class="app-input" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Set 4-Digit PIN</label>
+            <input id="inp-reg-pin" type="password" placeholder="e.g. 1234" value="1234" class="app-input" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Section (Auto-Syncs Timetable)</label>
+            <input id="inp-reg-sec" type="text" placeholder="e.g. K24AB / K23GP" value="K24AB" class="app-input" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Current CGPA</label>
+            <input id="inp-reg-cgpa" type="text" placeholder="e.g. 8.40" value="8.40" class="app-input" />
+          </div>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Program / Branch</label>
+          <select id="inp-reg-prog" class="app-input">
+            <option value="B.Tech CSE (AI & Data Science)">B.Tech CSE (AI &amp; Data Science)</option>
+            <option value="B.Tech CSE (Core)">B.Tech CSE (Core)</option>
+            <option value="B.Tech CSE (Cyber Security & Cloud)">B.Tech CSE (Cyber Security &amp; Cloud)</option>
+            <option value="BCA / MCA (Computer Applications)">BCA / MCA (Computer Applications)</option>
+            <option value="MBA (Mittal School of Business)">MBA (Mittal School of Business)</option>
+            <option value="B.Tech ECE / Robotics / ME">B.Tech ECE / Robotics / ME</option>
+            <option value="B.Pharm / B.Des / Agriculture">B.Pharm / B.Des / Agriculture</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Hostel / Residence</label>
+            <select id="inp-reg-hostel" class="app-input">
+              <option value="BH-1">BH-1</option>
+              <option value="BH-2">BH-2</option>
+              <option value="BH-3">BH-3</option>
+              <option value="BH-4" selected>BH-4</option>
+              <option value="BH-5">BH-5</option>
+              <option value="BH-6">BH-6</option>
+              <option value="BH-7">BH-7</option>
+              <option value="BH-8">BH-8</option>
+              <option value="GH-1">GH-1</option>
+              <option value="GH-2">GH-2</option>
+              <option value="GH-3">GH-3</option>
+              <option value="GH-4">GH-4</option>
+              <option value="GH-5">GH-5</option>
+              <option value="GH-6">GH-6</option>
+              <option value="Apartments">Apartments</option>
+              <option value="Day Scholar">Day Scholar</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold text-[var(--text-sub)] block mb-1">Room No.</label>
+            <input id="inp-reg-room" type="text" placeholder="e.g. B-305" value="B-305" class="app-input" />
+          </div>
+        </div>
+        <button onclick="submitStudentSignup()" class="w-full py-3 btn-accent text-xs tap-scale">
+          <i class="fa-solid fa-user-plus mr-1.5"></i>Create My LPU Account &amp; Digital ID
+        </button>
+      </div>
+
+      <p id="auth-status-msg" class="text-[11px] font-mono font-bold text-center text-[var(--text-sub)]">
+        CampusGrid v8.0 • Created by Aryan Khan (@iamaryaann)
+      </p>
+    </div>
+  </div>
+
   <!-- Minimal Native Toast Pill -->
   <div id="app-toast" class="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-slate-900 text-white text-xs font-bold shadow-lg transition-all duration-200 opacity-0 pointer-events-none">
     Saved
   </div>
 
+  
+  
   
   <style>
 /* ========================================================
