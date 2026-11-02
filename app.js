@@ -1,10 +1,10 @@
 // ========================================================
-// CAMPUSGRID v6.0 — COMPLETE LEVEL 1 + LEVEL 2 VERTO SUPER-APP
+// CAMPUSGRID v7.0 — ULTIMATE LEVEL 1–4 VERTO SUPER-APP
 // Native Mobile App Shell • Zero Embedded Map • 4 Clean Themes
-// Level 1: 1-Click Section Timetable Sync, PYQ Bank, Pocket-Money Budget,
-//          Block 32 Placement & OD Checker, Smart Class/CA Push Alerts
-// Level 2: Verto Bazaar (OLX), Campus Lost & Found, Live Mess Food Poll
-//          (Hybrid Cloud Sync + LocalStorage + WhatsApp Deep Links)
+// Pack 1: 1-Page ATS Resume PDF, Hackathon Team-Finder, Viva Flashcards,
+//         LPUNEST Scholarship & Grade-Improvement CGPA Boost Simulator
+// Pack 2: Hostel Night-Canteen Group Cart, RMS Maintenance Lifecycle,
+//         Mess Protein & Gym Split Tracker, Phone-to-Phone Magic Sync
 // ========================================================
 
 const STORAGE_KEYS = {
@@ -27,10 +27,15 @@ const STORAGE_KEYS = {
   GATEPASSES: 'cg_touch_gatepasses_v3',
   RMS: 'cg_touch_rms_v3',
   REBATES: 'cg_mess_rebates_v3',
-  SCANS: 'cg_touch_mess_scans_v3'
+  SCANS: 'cg_touch_mess_scans_v3',
+  RESUME: 'cg_verto_resume_v7',
+  TEAMUP: 'cg_verto_teamup_v7',
+  FLASHCARDS: 'cg_verto_flashcards_v7',
+  FITNESS: 'cg_verto_fitness_v7',
+  NIGHT_CART: 'cg_verto_nightcart_v7'
 };
 
-const CLOUD_FEED_TOPIC = 'lpu_campusgrid_v6_verto_community_hub';
+const CLOUD_FEED_TOPIC = 'lpu_campusgrid_v7_verto_community_hub';
 
 const THEME_ORDER = ['light', 'ocean', 'mint', 'dark'];
 const THEME_LABELS = {
@@ -221,6 +226,59 @@ const UMS_NOTICES = [
   { tag: 'DSW', title: 'One World & YouthVibe Student Registrations', meta: 'DSW • Block 13', desc: 'Approved participants get official On-Duty (OD) attendance credit.' }
 ];
 
+const DEFAULT_RESUME = {
+  email: 'verto.student@lpu.in',
+  phone: '+91 98765 43210',
+  github: 'github.com/verto-dev',
+  linkedin: 'linkedin.com/in/verto-lpu',
+  skills: 'C++, Python, Java, JavaScript, React, Node.js, SQL, Data Structures & Algorithms, Machine Learning, Git',
+  proj1: 'CampusGrid LPU Super-App | JavaScript, PWA, Tailwind — Built offline-first mobile super-app for attendance, timetable sync & campus utilities.',
+  proj2: 'Smart Placement & Marks Predictor | Python, Scikit-Learn — Engineered ML academic performance & company-tier eligibility model.',
+  certs: '250+ DSA Problems Solved (LeetCode/GFG) • NPTEL Cloud Computing Elite • Smart India Hackathon Internal Qualifier'
+};
+
+const DEFAULT_TEAMUP = [
+  { id: 'tm1', event: 'Smart India Hackathon (SIH 2026)', role: 'AI / ML Engineer', spots: 'Need 2 Members', stack: 'Python, FastAPI, RAG/LLM, React', leader: 'Aryan (K24AI)', phone: '9876543210', time: '1h ago' },
+  { id: 'tm2', event: 'CSE Minor / Capstone Project', role: 'Frontend / Mobile Dev', spots: 'Need 1 Member', stack: 'React Native / Next.js + Firebase', leader: 'Mehak (K23CS)', phone: '9876501234', time: '3h ago' },
+  { id: 'tm3', event: 'YouthVibe & One India Tech Stall', role: 'UI/UX & Pitch Deck', spots: 'Need 2 Members', stack: 'Figma, Canva, Live Product Demo', leader: 'Raghav (BH-5)', phone: '9876512345', time: 'Yesterday' },
+  { id: 'tm4', event: 'Smart Hostel IoT Automation', role: 'Hardware / IoT', spots: 'Need 1 Member', stack: 'ESP32, Sensors, C++ (Block 38 Lab)', leader: 'Devansh (ECE)', phone: '9876523456', time: '2d ago' }
+];
+
+const BUILTIN_FLASHCARDS = [
+  { id: 'fc1', cat: 'DSA', q: 'What is the average & worst-case time complexity of Hash Table lookup vs AVL Tree?', a: 'Hash Table: O(1) average, O(N) worst-case (collisions). AVL Tree (self-balancing BST): guaranteed O(log N) for search, insert & delete.' },
+  { id: 'fc2', cat: 'DSA', q: 'When should you use BFS vs DFS in graph problems, and what data structures do they use?', a: 'BFS uses a Queue (FIFO) and finds shortest path in unweighted graphs. DFS uses a Stack/Recursion (LIFO) for cycle detection, topological sort & backtracking.' },
+  { id: 'fc3', cat: 'DSA', q: 'Why is Merge Sort preferred for Linked Lists while Quick Sort is preferred for Arrays?', a: 'Linked Lists lack O(1) random access needed for Quick Sort partitioning, whereas Merge Sort merges nodes in O(1) auxiliary pointer space without random access.' },
+  { id: 'fc4', cat: 'OS', q: 'What are Coffman’s 4 necessary conditions for a Deadlock in Operating Systems?', a: '1. Mutual Exclusion, 2. Hold and Wait, 3. No Preemption, 4. Circular Wait. Breaking any one condition prevents deadlock.' },
+  { id: 'fc5', cat: 'OS', q: 'What is the core difference between a Mutex and a Binary Semaphore?', a: 'Mutex has ownership (only the thread that locked it can unlock it). A Binary Semaphore is a signaling mechanism where any process/thread can call wait() or signal().' },
+  { id: 'fc6', cat: 'OS', q: 'What is Thrashing in Virtual Memory and how does the OS fix it?', a: 'Thrashing occurs when a process spends more time paging (swapping pages) than executing due to insufficient frames. Fixed via Working-Set Model or Page-Fault Frequency control.' },
+  { id: 'fc7', cat: 'DBMS', q: 'Explain ACID properties in DBMS transactions in 1 line each.', a: 'Atomicity (All or nothing), Consistency (Valid state to valid state), Isolation (Concurrent txns don’t interfere), Durability (Committed data survives crashes).' },
+  { id: 'fc8', cat: 'DBMS', q: 'What is the difference between 3NF and BCNF (Boyce-Codd Normal Form)?', a: '3NF allows X -> Y if Y is a prime attribute. BCNF is stricter: for every non-trivial dependency X -> Y, X MUST be a Super Key.' },
+  { id: 'fc9', cat: 'CN', q: 'How does TCP 3-Way Handshake work and how does TCP differ from UDP?', a: 'Handshake: SYN -> SYN-ACK -> ACK. TCP is connection-oriented, reliable & ordered (flow/congestion control); UDP is connectionless, low-latency & best-effort.' },
+  { id: 'fc10', cat: 'CN', q: 'What happens when you type https://ums.lpu.in in your browser?', a: '1. DNS resolves IP -> 2. TCP 3-way handshake (Port 443) -> 3. TLS SSL Handshake -> 4. HTTP GET request -> 5. Server returns HTML & browser renders DOM.' },
+  { id: 'fc11', cat: 'HR/PEP', q: 'How do you structure behavioural answers in Block 32 Placement Interviews?', a: 'Use the STAR Method: Situation (context), Task (challenge), Action (exact technical steps YOU took), Result (quantifiable impact/metric).' },
+  { id: 'fc12', cat: 'HR/PEP', q: 'How to answer "Tell me about yourself" in 60 seconds during PEP / Placement drives?', a: '1. Current Role (B.Tech CSE at LPU + CGPA), 2. Core Tech Stack & 1 Flagship Project with impact, 3. Coding/Hackathon proof, 4. Why this company/role fits.' }
+];
+
+const NIGHT_CANTEEN_ITEMS = [
+  { id: 'nc1', name: 'Double Masala Cheese Maggi', price: 45, tag: 'Hostel Bestseller' },
+  { id: 'nc2', name: 'Tandoori Paneer Tikka Roll', price: 80, tag: 'Filling' },
+  { id: 'nc3', name: '2 Hot Aloo Paratha + Curd', price: 55, tag: 'Night Mess' },
+  { id: 'nc4', name: 'Thick Hazelnut Cold Coffee', price: 60, tag: 'Exam Fuel' },
+  { id: 'nc5', name: 'Egg Bhurji + 2 Butter Roti', price: 70, tag: 'High Protein' },
+  { id: 'nc6', name: 'Crispy Peri-Peri Fries / Burger', price: 65, tag: 'Snack' },
+  { id: 'nc7', name: 'Hostel Adrak Chai / Hot Coffee', price: 20, tag: 'Late Night' }
+];
+
+const DEFAULT_FITNESS = {
+  goalProtein: 100,
+  protein: 54,
+  kcal: 920,
+  water: 5,
+  streak: 4,
+  split: 'Push (Chest • Shoulder • Triceps)',
+  lastWorkoutDate: ''
+};
+
 // Runtime State
 let appTheme = 'light';
 let profile = {};
@@ -242,12 +300,21 @@ let rmsTickets = [];
 let rebates = [];
 let messScans = 14;
 let pomoSessionsDone = 0;
+let resumeData = {};
+let teamUpItems = [];
+let customFlashcards = [];
+let fitness = {};
+let nightCart = {};
 
 let selectedTtDay = 'Monday';
 let selectedMessDay = 'monday';
 let selectedCampusCat = 'all';
+let selectedFlashCat = 'All';
+let currentFlashIdx = 0;
+let flashShowingAnswer = false;
 let deferredInstallPrompt = null;
 let pendingSyncPayload = null;
+let pendingFullSyncPayload = null;
 
 // Pomodoro Timer State
 let pomoModeMins = 25;
@@ -271,7 +338,9 @@ document.addEventListener('DOMContentLoaded', () => {
   calcQuickSplit();
   calcOdMedical();
   calcPlacementEligibility();
+  calcScholarshipAndImprovement();
   checkIncomingSectionSync();
+  checkIncomingFullSync();
   pullLiveCommunityCloud();
 
   updateQrClock();
@@ -309,26 +378,36 @@ function loadState() {
   rebates = JSON.parse(localStorage.getItem(STORAGE_KEYS.REBATES) || 'null') || (typeof DEFAULT_REBATES !== 'undefined' ? JSON.parse(JSON.stringify(DEFAULT_REBATES)) : []);
   messScans = parseInt(localStorage.getItem(STORAGE_KEYS.SCANS) || '14', 10);
   pomoSessionsDone = parseInt(localStorage.getItem(STORAGE_KEYS.POMO_DONE) || '2', 10);
+  resumeData = JSON.parse(localStorage.getItem(STORAGE_KEYS.RESUME) || 'null') || { ...DEFAULT_RESUME };
+  teamUpItems = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEAMUP) || 'null') || JSON.parse(JSON.stringify(DEFAULT_TEAMUP));
+  customFlashcards = JSON.parse(localStorage.getItem(STORAGE_KEYS.FLASHCARDS) || 'null') || [];
+  fitness = JSON.parse(localStorage.getItem(STORAGE_KEYS.FITNESS) || 'null') || { ...DEFAULT_FITNESS };
+  nightCart = JSON.parse(localStorage.getItem(STORAGE_KEYS.NIGHT_CART) || 'null') || { nc1: 2, nc4: 1 };
 }
 
 function renderAll() {
   renderBudgetUI();
   renderMessPollUI();
   renderProfileAndHome();
+  renderResumeSummary();
   renderAttendance();
   renderTimetable();
   renderTasks();
   renderPyqBank();
+  renderFlashcardsUI();
   renderAlertsUI();
   renderPomodoroUI();
   renderSgpaCalculator();
   renderExams();
   renderMessMenu();
   renderMessQr();
+  renderNightCanteenUI();
   renderCafes();
+  renderFitnessUI();
   renderRebates();
   renderBazaarList();
   renderLostFoundList();
+  renderTeamUpList();
   renderCampusDirectory();
   renderLaundryUI();
   renderKhataList();
@@ -464,6 +543,9 @@ async function pullLiveCommunityCloud() {
         } else if (ev.kind === 'lostfound' && ev.item && !lostFoundItems.some((x) => x.id === ev.item.id)) {
           lostFoundItems.unshift(ev.item);
           changed = true;
+        } else if (ev.kind === 'teamup' && ev.item && !teamUpItems.some((x) => x.id === ev.item.id)) {
+          teamUpItems.unshift(ev.item);
+          changed = true;
         } else if (ev.kind === 'poll' && ev.choice && messPoll[ev.choice] !== undefined) {
           messPoll[ev.choice] += 1;
           changed = true;
@@ -474,8 +556,10 @@ async function pullLiveCommunityCloud() {
     if (changed) {
       localStorage.setItem(STORAGE_KEYS.BAZAAR, JSON.stringify(bazaarItems.slice(0, 40)));
       localStorage.setItem(STORAGE_KEYS.LOSTFOUND, JSON.stringify(lostFoundItems.slice(0, 40)));
+      localStorage.setItem(STORAGE_KEYS.TEAMUP, JSON.stringify(teamUpItems.slice(0, 40)));
       renderBazaarList();
       renderLostFoundList();
+      renderTeamUpList();
       renderMessPollUI();
     }
   } catch (e) {}
@@ -545,6 +629,18 @@ function switchSubTab(group, sub) {
 function jumpTo(screenId, subTab) {
   switchScreen(screenId);
   if (subTab) switchSubTab(screenId, subTab);
+}
+
+function openCommunityHub(mode) {
+  jumpTo('campus', 'bazaar');
+  switchBazaarMode(mode);
+}
+
+function openMagicSyncCard() {
+  switchScreen('profile');
+  setTimeout(() => {
+    document.getElementById('magic-sync-card')?.scrollIntoView({ behavior: 'smooth' });
+  }, 80);
 }
 
 function openQuickMealQr() {
@@ -1555,18 +1651,22 @@ function submitMessRebate() {
   showToast('Mess rebate submitted');
 }
 
-// ================= LEVEL 2 #6 & #7: VERTO BAZAAR (OLX) & LOST AND FOUND =================
+// ================= LEVEL 2 #6, #7 & PACK 1 #2: VERTO BAZAAR (OLX), LOST/FOUND & TEAM-FINDER =================
 function switchBazaarMode(mode) {
-  const isMarket = mode === 'market';
   const mBtn = document.getElementById('bz-mode-market');
   const lBtn = document.getElementById('bz-mode-lost');
+  const tBtn = document.getElementById('bz-mode-team');
   const mView = document.getElementById('view-bazaar-market');
   const lView = document.getElementById('view-bazaar-lost');
+  const tView = document.getElementById('view-bazaar-team');
 
-  if (mBtn) mBtn.className = `py-2.5 px-3 rounded-xl font-extrabold text-xs tap-scale ${isMarket ? 'btn-accent' : 'btn-neutral'}`;
-  if (lBtn) lBtn.className = `py-2.5 px-3 rounded-xl font-extrabold text-xs tap-scale ${!isMarket ? 'btn-accent' : 'btn-neutral'}`;
-  if (mView) mView.classList.toggle('hidden', !isMarket);
-  if (lView) lView.classList.toggle('hidden', isMarket);
+  if (mBtn) mBtn.className = `py-2.5 px-2 rounded-xl font-extrabold text-[11.5px] tap-scale ${mode === 'market' ? 'btn-accent' : 'btn-neutral'}`;
+  if (lBtn) lBtn.className = `py-2.5 px-2 rounded-xl font-extrabold text-[11.5px] tap-scale ${mode === 'lostfound' ? 'btn-accent' : 'btn-neutral'}`;
+  if (tBtn) tBtn.className = `py-2.5 px-2 rounded-xl font-extrabold text-[11.5px] tap-scale ${mode === 'teamup' ? 'btn-accent' : 'btn-neutral'}`;
+
+  if (mView) mView.classList.toggle('hidden', mode !== 'market');
+  if (lView) lView.classList.toggle('hidden', mode !== 'lostfound');
+  if (tView) tView.classList.toggle('hidden', mode !== 'teamup');
 }
 
 function cleanPhoneForWa(phone) {
@@ -1972,39 +2072,93 @@ function renderCabinsList() {
 function renderRmsList() {
   const box = document.getElementById('rms-tickets-list');
   if (!box) return;
-  box.innerHTML = rmsTickets.map((t) => `
-    <div class="app-card p-3.5 space-y-1">
-      <div class="flex items-center justify-between">
-        <span class="text-[11px] font-mono font-extrabold text-[var(--accent)]">${esc(t.id)}</span>
-        <span class="px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 text-[10px] font-bold">${esc(t.status)}</span>
+  if (rmsTickets.length === 0) {
+    box.innerHTML = `<div class="app-card p-3.5 text-center text-xs text-[var(--text-sub)]">No active hostel maintenance or Wi-Fi complaints.</div>`;
+    return;
+  }
+
+  box.innerHTML = rmsTickets.map((t, idx) => {
+    const isResolved = t.status.includes('Resolved');
+    const isEscalated = t.status.includes('Warden');
+    const badgeCls = isResolved
+      ? 'bg-emerald-500/15 text-emerald-600'
+      : isEscalated
+        ? 'bg-rose-500/15 text-rose-600'
+        : 'bg-amber-500/15 text-amber-600';
+
+    return `
+      <div class="app-card p-3.5 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[11px] font-mono font-extrabold text-[var(--accent)]">${esc(t.id)} • ${esc(t.date || 'Logged')}</span>
+          <div class="flex items-center gap-1.5">
+            <button onclick="cycleRmsStatus(${idx})" class="px-2 py-0.5 rounded-full ${badgeCls} text-[10px] font-extrabold border-0 cursor-pointer tap-scale" title="Tap to update status">
+              ${esc(t.status)} ↻
+            </button>
+            <button onclick="deleteRmsTicket(${idx})" class="text-[11px] text-[var(--text-faint)] bg-transparent border-0 cursor-pointer">✕</button>
+          </div>
+        </div>
+        <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(t.category)} • ${esc(t.location)}</h4>
+        <p class="text-xs text-[var(--text-sub)]">${esc(t.issue)}</p>
+        <div class="flex items-center justify-between pt-0.5">
+          <span class="text-[10px] font-semibold text-[var(--text-sub)]">Tap status pill to cycle Pending &rarr; Warden &rarr; Resolved</span>
+          <button onclick="copyRmsEscalationMsg(${idx})" class="px-2 py-1 rounded bg-[var(--surface-muted)] text-[10px] font-bold text-[var(--text-main)] border border-[var(--border)] cursor-pointer tap-scale">
+            Copy Follow-up
+          </button>
+        </div>
       </div>
-      <h4 class="text-xs font-extrabold text-[var(--text-main)]">${esc(t.category)} • ${esc(t.location)}</h4>
-      <p class="text-xs text-[var(--text-sub)]">${esc(t.issue)}</p>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 function submitRmsTicket() {
   const category = val('rms-cat');
+  const customId = val('rms-custom-id').toUpperCase();
   const location = val('rms-loc') || `${profile.hostel} ${profile.room}`;
   const issue = val('rms-desc');
   if (!issue) return showToast('Describe your issue first');
 
   rmsTickets.unshift({
-    id: 'RMS-' + Math.floor(10000 + Math.random() * 89999),
+    id: customId || 'RMS-' + Math.floor(10000 + Math.random() * 89999),
     category,
     location,
     issue,
-    date: 'Just now',
-    status: 'Logged'
+    date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+    status: 'Pending'
   });
   localStorage.setItem(STORAGE_KEYS.RMS, JSON.stringify(rmsTickets));
-  document.getElementById('rms-desc').value = '';
+  setVal('rms-custom-id', '');
+  setVal('rms-desc', '');
   renderRmsList();
-  showToast('RMS Ticket Registered');
+  showToast('RMS Complaint Logged');
 }
 
-// ================= PROFILE EDIT & GATE PASSES =================
+function cycleRmsStatus(idx) {
+  const item = rmsTickets[idx];
+  if (!item) return;
+  const order = ['Pending', 'Escalated to Warden', 'Resolved ✓'];
+  const cur = order.indexOf(item.status);
+  item.status = order[(cur + 1) % order.length];
+  localStorage.setItem(STORAGE_KEYS.RMS, JSON.stringify(rmsTickets));
+  renderRmsList();
+  showToast(`Ticket status: ${item.status}`);
+}
+
+function deleteRmsTicket(idx) {
+  rmsTickets.splice(idx, 1);
+  localStorage.setItem(STORAGE_KEYS.RMS, JSON.stringify(rmsTickets));
+  renderRmsList();
+}
+
+function copyRmsEscalationMsg(idx) {
+  const t = rmsTickets[idx];
+  if (!t) return;
+  const msg = `Respected Warden / Caretaker (${profile.hostel}), my maintenance ticket ${t.id} (${t.category}) for ${t.location} regarding "${t.issue}" is currently ${t.status}. Kindly expedite resolution. — ${profile.name} (Reg: ${profile.regNo})`;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(msg).then(() => showToast('Warden escalation note copied!'));
+  }
+}
+
+// ================= PROFILE EDIT, RESUME & GATE PASSES =================
 function openSheet(id) {
   if (id === 'sheet-profile') {
     setVal('inp-p-name', profile.name);
@@ -2020,9 +2174,519 @@ function openSheet(id) {
     setVal('inp-lnd-days', laundry.dropDays);
     setVal('inp-lnd-used', laundry.used);
     setVal('inp-lnd-max', laundry.max);
+  } else if (id === 'sheet-resume') {
+    setVal('inp-cv-email', resumeData.email);
+    setVal('inp-cv-phone', resumeData.phone);
+    setVal('inp-cv-github', resumeData.github);
+    setVal('inp-cv-linkedin', resumeData.linkedin);
+    setVal('inp-cv-skills', resumeData.skills);
+    setVal('inp-cv-proj1', resumeData.proj1);
+    setVal('inp-cv-proj2', resumeData.proj2);
+    setVal('inp-cv-certs', resumeData.certs);
   }
   const el = document.getElementById(id);
   if (el) el.classList.remove('hidden');
+}
+
+// ================= PACK 1 #1: 1-PAGE LPU ATS RESUME BUILDER & PDF GENERATOR =================
+function renderResumeSummary() {
+  setText('resume-preview-sub', `Skills: ${resumeData.skills || 'C++, Python, DSA, Web Dev'}`);
+}
+
+function saveResumeData(openPdfAfter) {
+  resumeData = {
+    email: val('inp-cv-email') || 'verto@lpu.in',
+    phone: val('inp-cv-phone') || '+91 98765 43210',
+    github: val('inp-cv-github') || 'github.com/verto',
+    linkedin: val('inp-cv-linkedin') || 'linkedin.com/in/verto',
+    skills: val('inp-cv-skills') || DEFAULT_RESUME.skills,
+    proj1: val('inp-cv-proj1') || DEFAULT_RESUME.proj1,
+    proj2: val('inp-cv-proj2') || DEFAULT_RESUME.proj2,
+    certs: val('inp-cv-certs') || DEFAULT_RESUME.certs
+  };
+  localStorage.setItem(STORAGE_KEYS.RESUME, JSON.stringify(resumeData));
+  closeSheet('sheet-resume');
+  renderResumeSummary();
+  showToast('ATS Resume Saved!');
+  if (openPdfAfter) {
+    setTimeout(() => generateResumePdf(), 120);
+  }
+}
+
+function generateResumePdf() {
+  const subList = subjects.map((s) => `${s.name} (${s.code})`).slice(0, 6).join(' • ');
+  const htmlDoc = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>${esc(profile.name)} — LPU ATS Resume</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; line-height: 1.45; margin: 0; padding: 20px; max-width: 780px; margin-inline: auto; }
+    h1 { font-size: 24px; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .sub { font-size: 12.5px; color: #334155; margin-top: 4px; }
+    .sec-h { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; color: #0f172a; border-bottom: 1.5px solid #0f172a; padding-bottom: 3px; margin: 16px 0 8px 0; }
+    .row { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; }
+    p, li { font-size: 12.5px; margin: 4px 0; color: #1e293b; }
+    ul { margin: 4px 0 8px 18px; padding: 0; }
+    .print-bar { background: #0f172a; color: #fff; padding: 10px 16px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; font-size: 13px; }
+    .print-btn { background: #ea580c; color: #fff; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; }
+    @media print { .print-bar { display: none !important; } body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="print-bar">
+    <span><strong>LPU PEP & Block 32 Placement ATS Resume</strong> — Select "Save as PDF" in Print Dialog</span>
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+  </div>
+  <h1>${esc(profile.name)}</h1>
+  <div class="sub">
+    <strong>Reg No:</strong> ${esc(profile.regNo)} | ${esc(resumeData.email)} | ${esc(resumeData.phone)}<br/>
+    ${esc(resumeData.github)} | ${esc(resumeData.linkedin)}
+  </div>
+
+  <div class="sec-h">Education</div>
+  <div class="row">
+    <span>Lovely Professional University (LPU), Phagwara, Punjab</span>
+    <span>CGPA: ${esc(profile.cgpa)} / 10.0</span>
+  </div>
+  <p><strong>${esc(profile.program)}</strong> • Section ${esc(profile.section)}</p>
+  <p><strong>Relevant Coursework:</strong> ${esc(subList)}</p>
+
+  <div class="sec-h">Technical Skills</div>
+  <p>${esc(resumeData.skills)}</p>
+
+  <div class="sec-h">Key Academic & Engineering Projects</div>
+  <ul>
+    <li>${esc(resumeData.proj1)}</li>
+    <li>${esc(resumeData.proj2)}</li>
+  </ul>
+
+  <div class="sec-h">Certifications, Hackathons & Achievements</div>
+  <ul>
+    ${(resumeData.certs || '').split('•').map((c) => c.trim()).filter(Boolean).map((c) => `<li>${esc(c)}</li>`).join('')}
+  </ul>
+  <script>setTimeout(() => { window.print(); }, 350);</script>
+</body>
+</html>`;
+
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.open();
+    w.document.write(htmlDoc);
+    w.document.close();
+  } else {
+    showToast('Allow popups to open PDF preview');
+  }
+}
+
+// ================= PACK 1 #2: HACKATHON & PROJECT TEAM-FINDER =================
+function renderTeamUpList() {
+  const box = document.getElementById('teamup-items-list');
+  if (!box) return;
+
+  box.innerHTML = teamUpItems.map((tm) => {
+    const waPhone = cleanPhoneForWa(tm.phone);
+    const waMsg = encodeURIComponent(`Hi ${tm.leader || 'Verto'}, saw your Team-Up post for "${tm.event}" (Role: ${tm.role}) on CampusGrid! I'd love to join.`);
+    const waHref = waPhone ? `https://wa.me/${waPhone}?text=${waMsg}` : `https://wa.me/?text=${waMsg}`;
+
+    return `
+      <div class="app-card p-3.5 space-y-2">
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0">
+            <span class="px-2 py-0.5 rounded text-[9.5px] font-extrabold" style="background: var(--accent-soft); color: var(--accent-text);">${esc(tm.role)}</span>
+            <h4 class="text-[13px] font-extrabold text-[var(--text-main)] mt-1">${esc(tm.event)}</h4>
+            <p class="text-[11px] font-semibold text-[var(--text-sub)] mt-0.5"><i class="fa-solid fa-code text-[var(--accent)] mr-1"></i>${esc(tm.stack)}</p>
+          </div>
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 text-[10px] font-extrabold shrink-0">${esc(tm.spots)}</span>
+        </div>
+        <div class="flex items-center justify-between pt-0.5 text-[11px]">
+          <span class="text-[var(--text-sub)]"><i class="fa-regular fa-user mr-1"></i>${esc(tm.leader)} • ${esc(tm.time || 'Active')}</span>
+          <a href="${waHref}" target="_blank" rel="noopener" class="px-2.5 py-1.5 rounded-lg bg-emerald-500/15 text-emerald-700 font-extrabold no-underline tap-scale">
+            <i class="fa-brands fa-whatsapp mr-1"></i>Join Team
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function submitTeamUpPost() {
+  const event = val('inp-tm-event');
+  const role = val('inp-tm-role') || 'Frontend / Mobile Dev';
+  const spots = val('inp-tm-spots') || 'Need 1 Member';
+  const stack = val('inp-tm-stack') || 'Open Tech Stack';
+  const phone = val('inp-tm-phone');
+  if (!event) return showToast('Enter hackathon or project name');
+
+  const newPost = {
+    id: 'tm_' + Date.now(),
+    event,
+    role,
+    spots,
+    stack,
+    leader: `${profile.name.split(' ')[0]} (${profile.section})`,
+    phone,
+    time: 'Just now'
+  };
+  teamUpItems.unshift(newPost);
+  localStorage.setItem(STORAGE_KEYS.TEAMUP, JSON.stringify(teamUpItems));
+  closeSheet('sheet-post-team');
+  renderTeamUpList();
+  pushCloudEvent({ kind: 'teamup', item: newPost });
+  showToast('Team Request Posted Live!');
+}
+
+// ================= PACK 1 #3: VIVA & PLACEMENT RAPID-FIRE FLASHCARDS =================
+function getFilteredFlashcards() {
+  const all = [...customFlashcards, ...BUILTIN_FLASHCARDS];
+  if (selectedFlashCat === 'All') return all;
+  return all.filter((c) => c.cat === selectedFlashCat);
+}
+
+function setFlashCat(cat) {
+  selectedFlashCat = cat;
+  currentFlashIdx = 0;
+  flashShowingAnswer = false;
+  renderFlashcardsUI();
+}
+
+function renderFlashcardsUI() {
+  const pillsBox = document.getElementById('flash-cat-pills');
+  const cats = ['All', 'DSA', 'OS', 'DBMS', 'CN', 'HR/PEP', 'Custom'];
+  if (pillsBox) {
+    pillsBox.innerHTML = cats.map((c) => `
+      <button onclick="setFlashCat('${c}')" class="filter-chip ${selectedFlashCat === c ? 'active' : ''}">${c}</button>
+    `).join('');
+  }
+
+  const deck = getFilteredFlashcards();
+  const box = document.getElementById('flashcard-box');
+  if (!box) return;
+
+  if (deck.length === 0) {
+    setText('flash-topic-lbl', selectedFlashCat);
+    setText('flash-badge', 'EMPTY DECK');
+    setText('flash-main-text', 'No cards in this category yet. Tap "+ Card" above to add your own viva Q&A!');
+    setText('flash-counter-lbl', '0 / 0');
+    box.classList.remove('is-answer');
+    return;
+  }
+
+  if (currentFlashIdx >= deck.length) currentFlashIdx = 0;
+  if (currentFlashIdx < 0) currentFlashIdx = deck.length - 1;
+  const card = deck[currentFlashIdx];
+
+  setText('flash-topic-lbl', card.cat);
+  setText('flash-badge', flashShowingAnswer ? '✅ ANSWER • TAP FOR QUESTION' : '❓ QUESTION • TAP TO FLIP');
+  setText('flash-main-text', flashShowingAnswer ? card.a : card.q);
+  setText('flash-counter-lbl', `${currentFlashIdx + 1} / ${deck.length}`);
+  box.classList.toggle('is-answer', flashShowingAnswer);
+}
+
+function flipFlashcard() {
+  flashShowingAnswer = !flashShowingAnswer;
+  renderFlashcardsUI();
+}
+
+function nextFlashcard() {
+  currentFlashIdx += 1;
+  flashShowingAnswer = false;
+  renderFlashcardsUI();
+}
+
+function prevFlashcard() {
+  currentFlashIdx -= 1;
+  flashShowingAnswer = false;
+  renderFlashcardsUI();
+}
+
+function saveCustomFlashcard() {
+  const cat = val('inp-fc-cat') || 'Custom';
+  const q = val('inp-fc-q');
+  const a = val('inp-fc-a');
+  if (!q || !a) return showToast('Enter both Question & Answer');
+
+  customFlashcards.unshift({ id: 'fc_u_' + Date.now(), cat, q, a });
+  localStorage.setItem(STORAGE_KEYS.FLASHCARDS, JSON.stringify(customFlashcards));
+  setVal('inp-fc-q', '');
+  setVal('inp-fc-a', '');
+  closeSheet('sheet-add-flashcard');
+  selectedFlashCat = cat;
+  currentFlashIdx = 0;
+  flashShowingAnswer = false;
+  renderFlashcardsUI();
+  showToast('Added to Viva Flashcards!');
+}
+
+// ================= PACK 1 #4: SCHOLARSHIP SAFETY & GRADE IMPROVEMENT CALCULATOR =================
+function calcScholarshipAndImprovement() {
+  const slabPct = parseInt(document.getElementById('inp-sch-slab')?.value || '30', 10);
+  const baseTuition = 140000;
+  const savedPerSem = Math.round((baseTuition * slabPct) / 100);
+  const schBox = document.getElementById('out-sch-rule');
+  if (schBox) {
+    if (slabPct > 0) {
+      schBox.innerHTML = `<span class="text-emerald-600">Saves ~₹${savedPerSem.toLocaleString('en-IN')}/sem</span> • Keep <strong>0 ETE Backlogs</strong> &amp; &ge;75% attendance to protect your ${slabPct}% LPUNEST waiver.`;
+    } else {
+      schBox.innerHTML = `Tip: Top academic standing &amp; national hackathons/sports medals qualify for DSW/Merit incentives.`;
+    }
+  }
+
+  const cred = Math.max(1, parseFloat(document.getElementById('inp-imp-cred')?.value || '4') || 4);
+  const oldGp = parseFloat(document.getElementById('inp-imp-old')?.value || '5') || 0;
+  const newGp = parseFloat(document.getElementById('inp-imp-new')?.value || '9') || 9;
+  const totalCredits = Math.max(16, parseFloat(document.getElementById('inp-past-credits')?.value || '60') || 60);
+  const curCgpa = Math.max(0, parseFloat(document.getElementById('inp-past-cgpa')?.value || profile.cgpa || '8.5') || 8.5);
+
+  const gpGain = Math.max(0, newGp - oldGp);
+  const cgpaBoost = (cred * gpGain) / totalCredits;
+  const afterCgpa = Math.min(10, curCgpa + cgpaBoost);
+
+  const impBox = document.getElementById('out-imp-box');
+  if (impBox) {
+    impBox.innerHTML = `Improving a <strong>${cred}-credit</strong> course from <strong>${oldGp} GP &rarr; ${newGp} GP</strong> boosts overall CGPA by <span class="text-emerald-600 font-extrabold">+${cgpaBoost.toFixed(2)}</span> (New CGPA: <span class="text-[var(--accent)] font-extrabold">${afterCgpa.toFixed(2)}</span>).`;
+  }
+}
+
+// ================= PACK 2 #5: HOSTEL NIGHT-CANTEEN GROUP-ORDER CART =================
+function updateNightCart(itemId, delta) {
+  const cur = Number(nightCart[itemId] || 0);
+  const next = Math.max(0, cur + delta);
+  if (next === 0) delete nightCart[itemId];
+  else nightCart[itemId] = next;
+  localStorage.setItem(STORAGE_KEYS.NIGHT_CART, JSON.stringify(nightCart));
+  renderNightCanteenUI();
+}
+
+function clearNightCart() {
+  nightCart = {};
+  localStorage.setItem(STORAGE_KEYS.NIGHT_CART, JSON.stringify(nightCart));
+  renderNightCanteenUI();
+  showToast('Night cart cleared');
+}
+
+function renderNightCanteenUI() {
+  const listEl = document.getElementById('night-menu-list');
+  if (!listEl) return;
+
+  let totalItems = 0;
+  let totalBill = 0;
+
+  listEl.innerHTML = NIGHT_CANTEEN_ITEMS.map((item) => {
+    const qty = Number(nightCart[item.id] || 0);
+    totalItems += qty;
+    totalBill += qty * item.price;
+
+    return `
+      <div class="app-card-muted p-2.5 flex items-center justify-between gap-2">
+        <div class="min-w-0">
+          <span class="text-xs font-extrabold text-[var(--text-main)] block truncate">${esc(item.name)}</span>
+          <span class="text-[10px] font-bold text-[var(--accent)]">₹${item.price} • ${esc(item.tag)}</span>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button onclick="updateNightCart('${item.id}', -1)" class="w-7 h-7 rounded-lg btn-neutral text-xs font-extrabold">−</button>
+          <span class="w-5 text-center text-xs font-extrabold text-[var(--text-main)]">${qty}</span>
+          <button onclick="updateNightCart('${item.id}', 1)" class="w-7 h-7 rounded-lg btn-accent text-xs font-extrabold">+</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const heads = Math.max(1, parseInt(document.getElementById('inp-night-heads')?.value || '3', 10) || 1);
+  const perHead = totalBill > 0 ? Math.ceil(totalBill / heads) : 0;
+
+  setText('night-cart-summary', `Cart: ${totalItems} items • ₹${totalBill}`);
+  setText('out-night-each', `₹${perHead}`);
+}
+
+function shareNightOrderWhatsApp() {
+  const lines = [];
+  let total = 0;
+  NIGHT_CANTEEN_ITEMS.forEach((item) => {
+    const q = Number(nightCart[item.id] || 0);
+    if (q > 0) {
+      lines.push(`• ${q}x ${item.name} (₹${q * item.price})`);
+      total += q * item.price;
+    }
+  });
+  if (lines.length === 0) return showToast('Add items to Night Canteen cart first');
+
+  const heads = Math.max(1, parseInt(document.getElementById('inp-night-heads')?.value || '3', 10) || 1);
+  const each = Math.ceil(total / heads);
+  const msg = `🌙 *${profile.hostel} Night-Canteen Order (${profile.room})*\n${lines.join('\n')}\n💰 *Total:* ₹${total} (÷ ${heads} = *₹${each} each*)\nUPI kar do bhai log!`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+}
+
+// ================= PACK 2 #7: VERTO MESS PROTEIN & GYM SPLIT TRACKER =================
+function renderFitnessUI() {
+  const goal = Math.max(30, Number(fitness.goalProtein || 100));
+  const prot = Math.max(0, Number(fitness.protein || 0));
+  const kcal = Math.max(0, Number(fitness.kcal || 0));
+  const water = Math.max(0, Number(fitness.water || 0));
+  const pct = Math.min(100, Math.round((prot / goal) * 100));
+
+  setText('gym-streak-lbl', `🔥 ${fitness.streak || 1}d Streak`);
+  setText('fit-prot-val', `${prot} / ${goal}g`);
+  setText('fit-kcal-val', `${kcal} kcal`);
+  setText('fit-water-val', `${water} / 10 💧`);
+  setVal('inp-gym-split', fitness.split || 'Push (Chest • Shoulder • Triceps)');
+
+  const bar = document.getElementById('fit-prot-bar');
+  if (bar) bar.style.width = `${pct}%`;
+}
+
+function quickAddMessMacro(label, p, k) {
+  fitness.protein = Number(fitness.protein || 0) + Number(p);
+  fitness.kcal = Number(fitness.kcal || 0) + Number(k);
+  localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+  renderFitnessUI();
+  showToast(`+${p}g Protein (${label})`);
+}
+
+function addWaterGlass() {
+  fitness.water = (Number(fitness.water || 0) + 1) % 15;
+  localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+  renderFitnessUI();
+  showToast(`Water: ${fitness.water} glasses 💧`);
+}
+
+function promptProteinGoal() {
+  const inp = prompt('Set Daily Protein Target (grams):', String(fitness.goalProtein || 100));
+  if (!inp) return;
+  const g = parseInt(inp, 10);
+  if (g >= 30) {
+    fitness.goalProtein = g;
+    localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+    renderFitnessUI();
+    showToast(`Protein goal: ${g}g/day`);
+  }
+}
+
+function resetDailyMacros() {
+  fitness.protein = 0;
+  fitness.kcal = 0;
+  fitness.water = 0;
+  localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+  renderFitnessUI();
+  showToast('Reset today’s macros & water');
+}
+
+function saveGymSplit() {
+  fitness.split = val('inp-gym-split') || fitness.split;
+  localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+  showToast('Workout split saved');
+}
+
+function markGymWorkoutDone() {
+  const todayStr = new Date().toDateString();
+  if (fitness.lastWorkoutDate !== todayStr) {
+    fitness.streak = Number(fitness.streak || 0) + 1;
+    fitness.lastWorkoutDate = todayStr;
+    localStorage.setItem(STORAGE_KEYS.FITNESS, JSON.stringify(fitness));
+    renderFitnessUI();
+  }
+  showToast(`Workout crushed! 🔥 ${fitness.streak} day streak`);
+}
+
+// ================= PACK 2 #8: PHONE-TO-PHONE MAGIC SYNC & ATTENDANCE SHARE =================
+function shareFullDeviceSyncLink() {
+  const bundle = {
+    p: profile,
+    s: subjects,
+    t: timetable,
+    k: tasks,
+    g: sgpaRows,
+    b: budget,
+    l: laundry,
+    r: resumeData
+  };
+  const token = encodeUtf8Base64Url(bundle);
+  const baseUrl = window.location.origin + window.location.pathname;
+  const fullUrl = `${baseUrl}?full_sync=${token}`;
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(fullUrl).then(() => showToast('Magic Sync Link copied! Open on new phone/laptop'));
+  }
+  if (navigator.share) {
+    navigator.share({
+      title: `CampusGrid Full Sync (${profile.name})`,
+      text: 'Open this Magic Sync link to transfer your complete CampusGrid profile, attendance, timetable, budget & resume:',
+      url: fullUrl
+    }).catch(() => {});
+  }
+}
+
+function checkIncomingFullSync() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('full_sync');
+    if (!raw) return;
+    triggerFullSyncPrompt(raw);
+  } catch (e) {}
+}
+
+function importPastedSyncLink() {
+  const rawInput = val('inp-paste-sync');
+  if (!rawInput) return showToast('Paste Magic Sync link or code first');
+  let token = rawInput;
+  if (rawInput.includes('full_sync=')) {
+    token = rawInput.split('full_sync=')[1].split('&')[0];
+  } else if (rawInput.includes('sec_sync=')) {
+    const secTok = rawInput.split('sec_sync=')[1].split('&')[0];
+    pendingSyncPayload = decodeUtf8Base64Url(secTok);
+    confirmSectionSyncImport();
+    setVal('inp-paste-sync', '');
+    return;
+  }
+  triggerFullSyncPrompt(token.trim());
+}
+
+function triggerFullSyncPrompt(token) {
+  try {
+    const data = decodeUtf8Base64Url(token);
+    if (!data || !data.p) return showToast('Invalid Magic Sync link');
+    pendingFullSyncPayload = data;
+    setText(
+      'full-sync-desc',
+      `Restore complete CampusGrid backup for "${data.p.name}" (Reg: ${data.p.regNo}, Section: ${data.p.section}) including Attendance, Timetable, CAs, Budget & ATS Resume onto this device?`
+    );
+    openSheet('sheet-full-sync');
+  } catch (e) {
+    showToast('Could not decode Magic Sync link');
+  }
+}
+
+function confirmFullDeviceSyncImport() {
+  if (!pendingFullSyncPayload) return;
+  const d = pendingFullSyncPayload;
+  if (d.p) { profile = d.p; localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile)); }
+  if (d.s) { subjects = d.s; localStorage.setItem(STORAGE_KEYS.SUBJECTS, JSON.stringify(subjects)); }
+  if (d.t) { timetable = d.t; localStorage.setItem(STORAGE_KEYS.TIMETABLE, JSON.stringify(timetable)); }
+  if (d.k) { tasks = d.k; localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks)); }
+  if (d.g) { sgpaRows = d.g; localStorage.setItem(STORAGE_KEYS.SGPA_ROWS, JSON.stringify(sgpaRows)); }
+  if (d.b) { budget = d.b; localStorage.setItem(STORAGE_KEYS.BUDGET, JSON.stringify(budget)); }
+  if (d.l) { laundry = d.l; localStorage.setItem(STORAGE_KEYS.LAUNDRY, JSON.stringify(laundry)); }
+  if (d.r) { resumeData = d.r; localStorage.setItem(STORAGE_KEYS.RESUME, JSON.stringify(resumeData)); }
+
+  pendingFullSyncPayload = null;
+  setVal('inp-paste-sync', '');
+  closeSheet('sheet-full-sync');
+  if (window.history && window.history.replaceState) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+  renderAll();
+  showToast('Full Device Backup Restored!');
+}
+
+function shareAttendanceCardWhatsApp() {
+  const agg = getAggregateAttendance();
+  const lines = subjects.map((s) => {
+    const p = s.total > 0 ? Math.round((s.attended / s.total) * 100) : 100;
+    return `${p >= 75 ? '🟢' : '🔴'} *${s.code}:* ${s.attended}/${s.total} (${p}%)`;
+  });
+  const msg = `📊 *LPU Attendance Report — ${profile.name} (${profile.section})*\n✨ *Aggregate:* ${agg.pct.toFixed(1)}%\n\n${lines.join('\n')}\n\n_Tracked on CampusGrid v7.0_`;
+  window.open('https://wa.me/?text=' + encodeURIComponent(msg), '_blank', 'noopener');
 }
 
 function closeSheet(id) {
@@ -2106,10 +2770,10 @@ function triggerAppInstall() {
 }
 
 function shareCampusGridApp() {
-  const shareUrl = 'https://iamaryaann.github.io/lpu-campusgrid/?v=6';
+  const shareUrl = 'https://iamaryaann.github.io/lpu-campusgrid/?v=7';
   const shareData = {
-    title: 'CampusGrid v6.0 — LPU Verto Super-App',
-    text: 'Check out CampusGrid v6.0 (1-Click Section Timetable Sync, PYQ Bank, Verto OLX Bazaar, Lost & Found, Pocket Budget, SGPA & Live Mess Poll):',
+    title: 'CampusGrid v7.0 — Ultimate LPU Verto Super-App',
+    text: 'Check out CampusGrid v7.0 (1-Click Section Timetable Sync, ATS Resume PDF, Viva Flashcards, Night-Canteen Cart, Mess Protein Tracker, Verto OLX, Lost & Found & Team-Up):',
     url: shareUrl
   };
   if (navigator.share) {
