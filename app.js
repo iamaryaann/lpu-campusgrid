@@ -42,6 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderEateries();
   renderCommunityReviews();
   renderWardenPanel();
+  renderLpuHub();
+  calculateLpuAttendance();
+  calculateLpuMarks();
   setupSearchAutocomplete();
   updateLiveMealStatus();
 
@@ -353,7 +356,7 @@ function jumpToMyMess() {
 // --------------------------------------------------------
 function switchTab(tabId) {
   currentTab = tabId;
-  const tabs = ['map', 'mess', 'community', 'eateries', 'warden', 'info', 'ppt'];
+  const tabs = ['map', 'lpu', 'mess', 'community', 'eateries', 'warden', 'info', 'ppt'];
 
   tabs.forEach(t => {
     const sec = document.getElementById(`tab-${t}`);
@@ -539,12 +542,13 @@ function renderMarkers(locations) {
   });
 }
 
-function filterMapCategory(cat) {
+function filterMapCategory(cat, btnEl) {
   currentCategory = cat;
 
   const pills = document.querySelectorAll('#category-filter-bar .cat-pill');
   pills.forEach(p => p.classList.remove('active'));
-  event.currentTarget.classList.add('active');
+  const targetBtn = btnEl || (typeof event !== 'undefined' && event ? event.currentTarget : null);
+  if (targetBtn) targetBtn.classList.add('active');
 
   const filtered = cat === 'all' 
     ? CAMPUS_LOCATIONS 
@@ -737,6 +741,10 @@ function openLocationDetails(locId) {
   document.getElementById('modal-description').textContent = target.description;
   document.getElementById('modal-dept').textContent = target.dept;
   document.getElementById('modal-nearest-food').textContent = target.nearestFood;
+  const tEl = document.getElementById('modal-timings');
+  if (tEl) tEl.textContent = target.timings || '08:00 AM - 08:00 PM';
+  const trEl = document.getElementById('modal-transit');
+  if (trEl) trEl.textContent = target.transit || '₹10 Campus E-Rickshaw Shuttle Available';
 
   const navBtn = document.getElementById('modal-navigate-btn');
   navBtn.onclick = () => {
@@ -1220,15 +1228,18 @@ function renderEateries(filterType = 'all') {
   });
 }
 
-function filterEateries(type) {
+function filterEateries(type, btnEl) {
   const pills = document.querySelectorAll('.eatery-pill');
   pills.forEach(p => {
     p.classList.remove('bg-white', 'text-orange-600', 'font-bold');
     p.classList.add('bg-black/20', 'text-white');
   });
 
-  event.currentTarget.classList.remove('bg-black/20', 'text-white');
-  event.currentTarget.classList.add('bg-white', 'text-orange-600', 'font-bold');
+  const targetBtn = btnEl || (typeof event !== 'undefined' && event ? event.currentTarget : null);
+  if (targetBtn) {
+    targetBtn.classList.remove('bg-black/20', 'text-white');
+    targetBtn.classList.add('bg-white', 'text-orange-600', 'font-bold');
+  }
 
   renderEateries(type);
 }
@@ -1350,5 +1361,208 @@ function triggerPwaInstall() {
     });
   } else {
     alert('📱 How to Install on your Phone:\n\n1. Open this website in your phone browser (Chrome on Android or Safari on iPhone).\n2. Tap the Menu (3 dots) on Chrome or the Share button on Safari.\n3. Tap "Add to Home screen" or "Install App".\n4. CampusGrid will install on your phone with a real app icon and run full-screen!');
+  }
+}
+
+
+// --------------------------------------------------------
+// 18. LPU A-Z SUPER HUB & INTERACTIVE VERTO CALCULATORS
+// --------------------------------------------------------
+function renderLpuHub() {
+  if (typeof LPU_ENCYCLOPEDIA === 'undefined') return;
+
+  // 1. Mega Stats
+  const statsGrid = document.getElementById('lpu-stats-grid');
+  if (statsGrid) {
+    statsGrid.innerHTML = LPU_ENCYCLOPEDIA.stats.map(s => `
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-1 hover-card">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${s.label}</span>
+          <i class="fa-solid ${s.icon} ${s.color} text-sm"></i>
+        </div>
+        <div class="text-lg sm:text-xl font-black text-slate-900 dark:text-white">${s.value}</div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">${s.sub}</p>
+      </div>
+    `).join('');
+  }
+
+  // 2. Blocks 1 to 57 Directory
+  filterLpuBlocks('');
+
+  // 3. Digital Portals
+  const portalsGrid = document.getElementById('lpu-portals-grid');
+  if (portalsGrid) {
+    portalsGrid.innerHTML = LPU_ENCYCLOPEDIA.digitalPortals.map(p => `
+      <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-2 hover-card">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-cyan-500/15 text-cyan-400 flex items-center justify-center text-sm shrink-0">
+              <i class="fa-solid ${p.icon}"></i>
+            </div>
+            <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">${p.name}</h4>
+          </div>
+          <span class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-900 text-[10px] font-mono font-bold text-lpu-500 shrink-0">${p.tag}</span>
+        </div>
+        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${p.desc}</p>
+      </div>
+    `).join('');
+  }
+
+  // 4. Fests & Culture
+  const festsList = document.getElementById('lpu-fests-list');
+  if (festsList) {
+    festsList.innerHTML = LPU_ENCYCLOPEDIA.festsAndCulture.map(f => `
+      <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 space-y-1">
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white flex items-center gap-2">
+            <i class="fa-solid ${f.icon} text-lpu-500"></i> ${f.title}
+          </span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-400">${f.badge}</span>
+        </div>
+        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">${f.desc}</p>
+      </div>
+    `).join('');
+  }
+
+  // 5. Transit, Rules & Placements
+  const transitList = document.getElementById('lpu-transit-list');
+  if (transitList) {
+    transitList.innerHTML = LPU_ENCYCLOPEDIA.transitAndRules.map(t => `
+      <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-700/80 flex items-start gap-3">
+        <i class="fa-solid fa-circle-check text-emerald-400 text-xs mt-1 shrink-0"></i>
+        <div class="text-xs">
+          <span class="font-bold text-slate-900 dark:text-white block">${t.title}</span>
+          <span class="text-slate-600 dark:text-slate-400 leading-snug">${t.detail}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function filterLpuBlocks(query) {
+  if (typeof LPU_ENCYCLOPEDIA === 'undefined') return;
+  const grid = document.getElementById('lpu-blocks-grid');
+  if (!grid) return;
+
+  const q = (query || '').toLowerCase().trim();
+  const items = !q
+    ? LPU_ENCYCLOPEDIA.blocksGuide
+    : LPU_ENCYCLOPEDIA.blocksGuide.filter(b =>
+        b.blocks.toLowerCase().includes(q) ||
+        b.school.toLowerCase().includes(q) ||
+        b.highlights.toLowerCase().includes(q)
+      );
+
+  if (items.length === 0) {
+    grid.innerHTML = `<div class="col-span-full p-4 text-center text-xs text-slate-400">No matching LPU block or school found.</div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map(b => `
+    <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 space-y-1.5">
+      <div class="flex items-center justify-between">
+        <span class="px-2.5 py-0.5 rounded-lg bg-lpu-500/20 text-lpu-400 border border-lpu-500/30 text-xs font-extrabold">${b.blocks}</span>
+        <i class="fa-solid fa-location-dot text-slate-500 text-xs"></i>
+      </div>
+      <h4 class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white leading-snug">${b.school}</h4>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400">${b.highlights}</p>
+    </div>
+  `).join('');
+}
+
+function calculateLpuAttendance() {
+  const attEl = document.getElementById('att-attended');
+  const totEl = document.getElementById('att-total');
+  if (!attEl || !totEl) return;
+
+  let attended = Math.max(0, parseInt(attEl.value) || 0);
+  let total = Math.max(1, parseInt(totEl.value) || 1);
+  if (attended > total) attended = total;
+
+  const pct = (attended / total) * 100;
+  let attMarks = 0;
+  if (pct >= 90) attMarks = 5;
+  else if (pct >= 85) attMarks = 4;
+  else if (pct >= 80) attMarks = 3;
+  else if (pct >= 75) attMarks = 2;
+
+  const pctText = document.getElementById('att-percent-text');
+  const bar = document.getElementById('att-progress-bar');
+  const advice = document.getElementById('att-advice-text');
+  const pill = document.getElementById('att-marks-pill');
+
+  if (pctText) {
+    pctText.textContent = `${pct.toFixed(1)}%`;
+    pctText.className = `text-2xl font-black ${pct >= 75 ? 'text-emerald-400' : 'text-rose-500'}`;
+  }
+  if (bar) {
+    bar.style.width = `${Math.min(100, pct).toFixed(1)}%`;
+    bar.className = `h-2.5 rounded-full transition-all duration-300 ${pct >= 75 ? 'bg-gradient-to-r from-cyan-500 to-emerald-500' : 'bg-gradient-to-r from-rose-600 to-amber-500'}`;
+  }
+  if (pill) {
+    pill.textContent = `${attMarks} / 5 Att. Marks`;
+  }
+
+  if (advice) {
+    if (pct >= 75) {
+      const canSkip = Math.floor((attended - 0.75 * total) / 0.75);
+      advice.innerHTML = canSkip > 0
+        ? `✅ <span class="text-emerald-400">Safe for End-Term Exams!</span> You can safely miss up to <strong>${canSkip} lecture${canSkip > 1 ? 's' : ''}</strong> and still stay above 75%.`
+        : `✅ <span class="text-amber-400">Right on the 75% boundary!</span> Do not miss the next lecture to avoid shortage.`;
+    } else {
+      const needAttend = Math.ceil((0.75 * total - attended) / 0.25);
+      advice.innerHTML = `⚠️ <span class="text-rose-400">Shortage Alert (&lt;75%)!</span> Attend the next <strong>${needAttend} consecutive lecture${needAttend > 1 ? 's' : ''}</strong> (or claim approved DSW Duty Leave) to reach 75%.`;
+    }
+  }
+}
+
+function calculateLpuMarks() {
+  const att = Math.min(5, Math.max(0, parseFloat(document.getElementById('mk-att')?.value) || 0));
+  const ca = Math.min(25, Math.max(0, parseFloat(document.getElementById('mk-ca')?.value) || 0));
+  const mte = Math.min(20, Math.max(0, parseFloat(document.getElementById('mk-mte')?.value) || 0));
+  const ete = Math.min(50, Math.max(0, parseFloat(document.getElementById('mk-ete')?.value) || 0));
+
+  const total = Math.round((att + ca + mte + ete) * 10) / 10;
+  let grade = 'E (Reappear)';
+  let gp = 0;
+
+  if (ete < 15 || total < 40) {
+    grade = 'E (Reappear)';
+    gp = 0;
+  } else if (total >= 90) {
+    grade = 'O (Outstanding)';
+    gp = 10;
+  } else if (total >= 80) {
+    grade = 'A+';
+    gp = 9;
+  } else if (total >= 70) {
+    grade = 'A';
+    gp = 8;
+  } else if (total >= 60) {
+    grade = 'B+';
+    gp = 7;
+  } else if (total >= 50) {
+    grade = 'B';
+    gp = 6;
+  } else if (total >= 45) {
+    grade = 'C';
+    gp = 5;
+  } else {
+    grade = 'P (Pass)';
+    gp = 4;
+  }
+
+  const totEl = document.getElementById('mk-total-text');
+  const pillEl = document.getElementById('grade-badge-pill');
+  const verdEl = document.getElementById('mk-verdict-text');
+
+  if (totEl) totEl.textContent = `${total} / 100`;
+  if (pillEl) pillEl.textContent = `${grade} • ${gp} GP`;
+  if (verdEl) {
+    if (gp === 0) {
+      verdEl.innerHTML = `⚠️ <span class="text-rose-400">Below Passing Threshold:</span> Ensure at least 30% in ETE (15/50) and 40/100 overall to clear the course.`;
+    } else {
+      verdEl.innerHTML = `🎯 <span class="text-emerald-400">Course Cleared!</span> Estimated Grade: <strong>${grade} (${gp} Grade Points)</strong> toward your Semester TGPA.`;
+    }
   }
 }
